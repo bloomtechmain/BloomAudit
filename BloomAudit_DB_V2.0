@@ -1,0 +1,2194 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict wP4JadfC6mPtxPJe6YmpJqTFANhFeCes1UhzlaIC4HQyXp7HTpnGPrPchaoQfRP
+
+-- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
+
+-- Started on 2026-02-04 13:29:16 CST
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 248 (class 1259 OID 17340)
+-- Name: assets; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.assets (
+    id integer NOT NULL,
+    asset_name text NOT NULL,
+    value numeric NOT NULL,
+    purchase_date date NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.assets OWNER TO postgres;
+
+--
+-- TOC entry 247 (class 1259 OID 17339)
+-- Name: assets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.assets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.assets_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3745 (class 0 OID 0)
+-- Dependencies: 247
+-- Name: assets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.assets_id_seq OWNED BY public.assets.id;
+
+
+--
+-- TOC entry 220 (class 1259 OID 17069)
+-- Name: bank_transactions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.bank_transactions (
+    id integer NOT NULL,
+    bank_account_id integer NOT NULL,
+    transaction_type character varying(10),
+    amount numeric(15,2) NOT NULL,
+    description text,
+    transaction_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT bank_transactions_amount_check CHECK ((amount > (0)::numeric)),
+    CONSTRAINT bank_transactions_transaction_type_check CHECK (((transaction_type)::text = ANY ((ARRAY['DEBIT'::character varying, 'CREDIT'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.bank_transactions OWNER TO postgres;
+
+--
+-- TOC entry 219 (class 1259 OID 17068)
+-- Name: bank_transactions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.bank_transactions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.bank_transactions_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3746 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: bank_transactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.bank_transactions_id_seq OWNED BY public.bank_transactions.id;
+
+
+--
+-- TOC entry 216 (class 1259 OID 17046)
+-- Name: banks; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.banks (
+    id integer NOT NULL,
+    bank_name character varying(100) NOT NULL,
+    branch character varying(100),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.banks OWNER TO postgres;
+
+--
+-- TOC entry 215 (class 1259 OID 17045)
+-- Name: banks_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.banks_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.banks_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3747 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: banks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.banks_id_seq OWNED BY public.banks.id;
+
+
+--
+-- TOC entry 218 (class 1259 OID 17054)
+-- Name: company_bank_accounts; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.company_bank_accounts (
+    id integer NOT NULL,
+    bank_id integer NOT NULL,
+    account_number character varying(50) NOT NULL,
+    account_name character varying(100),
+    opening_balance numeric(15,2) NOT NULL,
+    current_balance numeric(15,2) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.company_bank_accounts OWNER TO postgres;
+
+--
+-- TOC entry 217 (class 1259 OID 17053)
+-- Name: company_bank_accounts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.company_bank_accounts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.company_bank_accounts_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3748 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: company_bank_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.company_bank_accounts_id_seq OWNED BY public.company_bank_accounts.id;
+
+
+--
+-- TOC entry 251 (class 1259 OID 17359)
+-- Name: contract_items; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.contract_items (
+    contract_id integer NOT NULL,
+    requirements text NOT NULL,
+    service_category text NOT NULL,
+    unit_cost numeric NOT NULL,
+    requirement_type text NOT NULL
+);
+
+
+ALTER TABLE public.contract_items OWNER TO postgres;
+
+--
+-- TOC entry 259 (class 1259 OID 17442)
+-- Name: contracts; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.contracts (
+    contract_id integer NOT NULL,
+    project_id integer NOT NULL,
+    contract_name character varying(200) NOT NULL,
+    customer_name character varying(200),
+    description text,
+    initial_cost_budget numeric(12,2) DEFAULT 0,
+    extra_budget_allocation numeric(12,2) DEFAULT 0,
+    payment_type character varying(50),
+    status character varying(50) DEFAULT 'pending'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.contracts OWNER TO postgres;
+
+--
+-- TOC entry 258 (class 1259 OID 17441)
+-- Name: contracts_contract_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.contracts_contract_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.contracts_contract_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3749 (class 0 OID 0)
+-- Dependencies: 258
+-- Name: contracts_contract_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.contracts_contract_id_seq OWNED BY public.contracts.contract_id;
+
+
+--
+-- TOC entry 255 (class 1259 OID 17383)
+-- Name: employees; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.employees (
+    id integer NOT NULL,
+    name character varying(150) NOT NULL,
+    email character varying(100),
+    phone character varying(30),
+    role character varying(100),
+    department character varying(100),
+    hire_date date,
+    salary numeric(12,2),
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.employees OWNER TO postgres;
+
+--
+-- TOC entry 254 (class 1259 OID 17382)
+-- Name: employees_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.employees_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.employees_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3750 (class 0 OID 0)
+-- Dependencies: 254
+-- Name: employees_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.employees_id_seq OWNED BY public.employees.id;
+
+
+--
+-- TOC entry 238 (class 1259 OID 17236)
+-- Name: note_shares; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.note_shares (
+    id integer NOT NULL,
+    note_id integer NOT NULL,
+    shared_with_user_id integer NOT NULL,
+    permission character varying(10) DEFAULT 'read'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT note_shares_permission_check CHECK (((permission)::text = ANY ((ARRAY['read'::character varying, 'write'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.note_shares OWNER TO postgres;
+
+--
+-- TOC entry 237 (class 1259 OID 17235)
+-- Name: note_shares_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.note_shares_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.note_shares_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3751 (class 0 OID 0)
+-- Dependencies: 237
+-- Name: note_shares_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.note_shares_id_seq OWNED BY public.note_shares.id;
+
+
+--
+-- TOC entry 236 (class 1259 OID 17218)
+-- Name: notes; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.notes (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    title character varying(200) NOT NULL,
+    content text,
+    color character varying(20) DEFAULT '#ffffff'::character varying,
+    is_pinned boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.notes OWNER TO postgres;
+
+--
+-- TOC entry 235 (class 1259 OID 17217)
+-- Name: notes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.notes_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.notes_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3752 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: notes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.notes_id_seq OWNED BY public.notes.id;
+
+
+--
+-- TOC entry 244 (class 1259 OID 17302)
+-- Name: password_history; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.password_history (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    password_hash text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.password_history OWNER TO postgres;
+
+--
+-- TOC entry 243 (class 1259 OID 17301)
+-- Name: password_history_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.password_history_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.password_history_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3753 (class 0 OID 0)
+-- Dependencies: 243
+-- Name: password_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.password_history_id_seq OWNED BY public.password_history.id;
+
+
+--
+-- TOC entry 224 (class 1259 OID 17104)
+-- Name: payables; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.payables (
+    payable_id integer NOT NULL,
+    vendor_id integer NOT NULL,
+    payable_name character varying(150) NOT NULL,
+    description text,
+    payable_type character varying(20),
+    amount numeric(12,2) NOT NULL,
+    frequency character varying(20),
+    start_date date,
+    end_date date,
+    contract_id integer,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT payables_frequency_check CHECK (((frequency)::text = ANY ((ARRAY['WEEKLY'::character varying, 'MONTHLY'::character varying, 'YEARLY'::character varying])::text[]))),
+    CONSTRAINT payables_payable_type_check CHECK (((payable_type)::text = ANY ((ARRAY['ONE_TIME'::character varying, 'RECURRING'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.payables OWNER TO postgres;
+
+--
+-- TOC entry 223 (class 1259 OID 17103)
+-- Name: payables_payable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.payables_payable_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.payables_payable_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3754 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: payables_payable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.payables_payable_id_seq OWNED BY public.payables.payable_id;
+
+
+--
+-- TOC entry 230 (class 1259 OID 17154)
+-- Name: permissions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.permissions (
+    id integer NOT NULL,
+    resource character varying(50) NOT NULL,
+    action character varying(20) NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.permissions OWNER TO postgres;
+
+--
+-- TOC entry 229 (class 1259 OID 17153)
+-- Name: permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.permissions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.permissions_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3755 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.permissions_id_seq OWNED BY public.permissions.id;
+
+
+--
+-- TOC entry 250 (class 1259 OID 17350)
+-- Name: petty_cash_account; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.petty_cash_account (
+    id integer NOT NULL,
+    account_name character varying(100) DEFAULT 'Petty Cash'::character varying,
+    current_balance numeric(15,2) DEFAULT 0.00,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.petty_cash_account OWNER TO postgres;
+
+--
+-- TOC entry 249 (class 1259 OID 17349)
+-- Name: petty_cash_account_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.petty_cash_account_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.petty_cash_account_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3756 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: petty_cash_account_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.petty_cash_account_id_seq OWNED BY public.petty_cash_account.id;
+
+
+--
+-- TOC entry 253 (class 1259 OID 17372)
+-- Name: petty_cash_transactions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.petty_cash_transactions (
+    id integer NOT NULL,
+    transaction_type character varying(10),
+    amount numeric(12,2) NOT NULL,
+    description text,
+    category character varying(100),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT petty_cash_transactions_transaction_type_check CHECK (((transaction_type)::text = ANY ((ARRAY['ADD'::character varying, 'SPEND'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.petty_cash_transactions OWNER TO postgres;
+
+--
+-- TOC entry 252 (class 1259 OID 17371)
+-- Name: petty_cash_transactions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.petty_cash_transactions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.petty_cash_transactions_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3757 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: petty_cash_transactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.petty_cash_transactions_id_seq OWNED BY public.petty_cash_transactions.id;
+
+
+--
+-- TOC entry 257 (class 1259 OID 17431)
+-- Name: projects; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.projects (
+    project_id integer NOT NULL,
+    project_name character varying(200) NOT NULL,
+    project_description text,
+    status character varying(50) DEFAULT 'active'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.projects OWNER TO postgres;
+
+--
+-- TOC entry 256 (class 1259 OID 17430)
+-- Name: projects_project_id_seq1; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.projects_project_id_seq1
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.projects_project_id_seq1 OWNER TO postgres;
+
+--
+-- TOC entry 3758 (class 0 OID 0)
+-- Dependencies: 256
+-- Name: projects_project_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.projects_project_id_seq1 OWNED BY public.projects.project_id;
+
+
+--
+-- TOC entry 233 (class 1259 OID 17187)
+-- Name: rbac_audit_log; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.rbac_audit_log (
+    id integer NOT NULL,
+    user_id integer,
+    action character varying(100) NOT NULL,
+    details jsonb,
+    ip_address character varying(50),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.rbac_audit_log OWNER TO postgres;
+
+--
+-- TOC entry 232 (class 1259 OID 17186)
+-- Name: rbac_audit_log_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.rbac_audit_log_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.rbac_audit_log_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3759 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: rbac_audit_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.rbac_audit_log_id_seq OWNED BY public.rbac_audit_log.id;
+
+
+--
+-- TOC entry 246 (class 1259 OID 17319)
+-- Name: receivables; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.receivables (
+    receivable_id integer NOT NULL,
+    payer_name character varying(150) NOT NULL,
+    receivable_name character varying(150) NOT NULL,
+    description text,
+    receivable_type character varying(50),
+    amount numeric(12,2) NOT NULL,
+    frequency character varying(50),
+    start_date date,
+    end_date date,
+    contract_id integer,
+    is_active boolean DEFAULT true,
+    bank_account_id integer,
+    payment_method character varying(50),
+    reference_number character varying(100),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.receivables OWNER TO postgres;
+
+--
+-- TOC entry 245 (class 1259 OID 17318)
+-- Name: receivables_receivable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.receivables_receivable_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.receivables_receivable_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3760 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: receivables_receivable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.receivables_receivable_id_seq OWNED BY public.receivables.receivable_id;
+
+
+--
+-- TOC entry 231 (class 1259 OID 17165)
+-- Name: role_permissions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.role_permissions (
+    role_id integer NOT NULL,
+    permission_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.role_permissions OWNER TO postgres;
+
+--
+-- TOC entry 228 (class 1259 OID 17140)
+-- Name: roles; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.roles (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    description text,
+    is_system_role boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.roles OWNER TO postgres;
+
+--
+-- TOC entry 227 (class 1259 OID 17139)
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.roles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.roles_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3761 (class 0 OID 0)
+-- Dependencies: 227
+-- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
+
+
+--
+-- TOC entry 242 (class 1259 OID 17278)
+-- Name: todo_shares; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.todo_shares (
+    id integer NOT NULL,
+    todo_id integer NOT NULL,
+    shared_with_user_id integer NOT NULL,
+    permission character varying(10) DEFAULT 'read'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT todo_shares_permission_check CHECK (((permission)::text = ANY ((ARRAY['read'::character varying, 'write'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.todo_shares OWNER TO postgres;
+
+--
+-- TOC entry 241 (class 1259 OID 17277)
+-- Name: todo_shares_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.todo_shares_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.todo_shares_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3762 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: todo_shares_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.todo_shares_id_seq OWNED BY public.todo_shares.id;
+
+
+--
+-- TOC entry 240 (class 1259 OID 17258)
+-- Name: todos; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.todos (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    title character varying(200) NOT NULL,
+    description text,
+    status character varying(20) DEFAULT 'pending'::character varying,
+    priority character varying(10) DEFAULT 'medium'::character varying,
+    due_date date,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT todos_priority_check CHECK (((priority)::text = ANY ((ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying])::text[]))),
+    CONSTRAINT todos_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying, 'completed'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.todos OWNER TO postgres;
+
+--
+-- TOC entry 239 (class 1259 OID 17257)
+-- Name: todos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.todos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.todos_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3763 (class 0 OID 0)
+-- Dependencies: 239
+-- Name: todos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.todos_id_seq OWNED BY public.todos.id;
+
+
+--
+-- TOC entry 234 (class 1259 OID 17201)
+-- Name: user_roles; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_roles (
+    user_id integer NOT NULL,
+    role_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.user_roles OWNER TO postgres;
+
+--
+-- TOC entry 226 (class 1259 OID 17127)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    name text NOT NULL,
+    email text NOT NULL,
+    password_hash text NOT NULL,
+    role text DEFAULT 'user'::text,
+    created_at timestamp without time zone DEFAULT now(),
+    password_must_change boolean DEFAULT false
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 3764 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: COLUMN users.password_must_change; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.users.password_must_change IS 'Flag to force password change on next login';
+
+
+--
+-- TOC entry 225 (class 1259 OID 17126)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3765 (class 0 OID 0)
+-- Dependencies: 225
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- TOC entry 222 (class 1259 OID 17095)
+-- Name: vendors; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.vendors (
+    vendor_id integer NOT NULL,
+    vendor_name character varying(150) NOT NULL,
+    contact_email character varying(100),
+    contact_phone character varying(30),
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.vendors OWNER TO postgres;
+
+--
+-- TOC entry 221 (class 1259 OID 17094)
+-- Name: vendors_vendor_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.vendors_vendor_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.vendors_vendor_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3766 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: vendors_vendor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.vendors_vendor_id_seq OWNED BY public.vendors.vendor_id;
+
+
+--
+-- TOC entry 3442 (class 2604 OID 17343)
+-- Name: assets id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.assets ALTER COLUMN id SET DEFAULT nextval('public.assets_id_seq'::regclass);
+
+
+--
+-- TOC entry 3399 (class 2604 OID 17072)
+-- Name: bank_transactions id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bank_transactions ALTER COLUMN id SET DEFAULT nextval('public.bank_transactions_id_seq'::regclass);
+
+
+--
+-- TOC entry 3395 (class 2604 OID 17049)
+-- Name: banks id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.banks ALTER COLUMN id SET DEFAULT nextval('public.banks_id_seq'::regclass);
+
+
+--
+-- TOC entry 3397 (class 2604 OID 17057)
+-- Name: company_bank_accounts id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_bank_accounts ALTER COLUMN id SET DEFAULT nextval('public.company_bank_accounts_id_seq'::regclass);
+
+
+--
+-- TOC entry 3456 (class 2604 OID 17445)
+-- Name: contracts contract_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contracts ALTER COLUMN contract_id SET DEFAULT nextval('public.contracts_contract_id_seq'::regclass);
+
+
+--
+-- TOC entry 3450 (class 2604 OID 17386)
+-- Name: employees id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employees ALTER COLUMN id SET DEFAULT nextval('public.employees_id_seq'::regclass);
+
+
+--
+-- TOC entry 3426 (class 2604 OID 17239)
+-- Name: note_shares id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.note_shares ALTER COLUMN id SET DEFAULT nextval('public.note_shares_id_seq'::regclass);
+
+
+--
+-- TOC entry 3421 (class 2604 OID 17221)
+-- Name: notes id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.notes ALTER COLUMN id SET DEFAULT nextval('public.notes_id_seq'::regclass);
+
+
+--
+-- TOC entry 3437 (class 2604 OID 17305)
+-- Name: password_history id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.password_history ALTER COLUMN id SET DEFAULT nextval('public.password_history_id_seq'::regclass);
+
+
+--
+-- TOC entry 3404 (class 2604 OID 17107)
+-- Name: payables payable_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payables ALTER COLUMN payable_id SET DEFAULT nextval('public.payables_payable_id_seq'::regclass);
+
+
+--
+-- TOC entry 3415 (class 2604 OID 17157)
+-- Name: permissions id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.permissions ALTER COLUMN id SET DEFAULT nextval('public.permissions_id_seq'::regclass);
+
+
+--
+-- TOC entry 3444 (class 2604 OID 17353)
+-- Name: petty_cash_account id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.petty_cash_account ALTER COLUMN id SET DEFAULT nextval('public.petty_cash_account_id_seq'::regclass);
+
+
+--
+-- TOC entry 3448 (class 2604 OID 17375)
+-- Name: petty_cash_transactions id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.petty_cash_transactions ALTER COLUMN id SET DEFAULT nextval('public.petty_cash_transactions_id_seq'::regclass);
+
+
+--
+-- TOC entry 3453 (class 2604 OID 17434)
+-- Name: projects project_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.projects ALTER COLUMN project_id SET DEFAULT nextval('public.projects_project_id_seq1'::regclass);
+
+
+--
+-- TOC entry 3418 (class 2604 OID 17190)
+-- Name: rbac_audit_log id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.rbac_audit_log ALTER COLUMN id SET DEFAULT nextval('public.rbac_audit_log_id_seq'::regclass);
+
+
+--
+-- TOC entry 3439 (class 2604 OID 17322)
+-- Name: receivables receivable_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.receivables ALTER COLUMN receivable_id SET DEFAULT nextval('public.receivables_receivable_id_seq'::regclass);
+
+
+--
+-- TOC entry 3411 (class 2604 OID 17143)
+-- Name: roles id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
+
+
+--
+-- TOC entry 3434 (class 2604 OID 17281)
+-- Name: todo_shares id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todo_shares ALTER COLUMN id SET DEFAULT nextval('public.todo_shares_id_seq'::regclass);
+
+
+--
+-- TOC entry 3429 (class 2604 OID 17261)
+-- Name: todos id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todos ALTER COLUMN id SET DEFAULT nextval('public.todos_id_seq'::regclass);
+
+
+--
+-- TOC entry 3407 (class 2604 OID 17130)
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- TOC entry 3401 (class 2604 OID 17098)
+-- Name: vendors vendor_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.vendors ALTER COLUMN vendor_id SET DEFAULT nextval('public.vendors_vendor_id_seq'::regclass);
+
+
+--
+-- TOC entry 3728 (class 0 OID 17340)
+-- Dependencies: 248
+-- Data for Name: assets; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.assets (id, asset_name, value, purchase_date, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3700 (class 0 OID 17069)
+-- Dependencies: 220
+-- Data for Name: bank_transactions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.bank_transactions (id, bank_account_id, transaction_type, amount, description, transaction_date) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3696 (class 0 OID 17046)
+-- Dependencies: 216
+-- Data for Name: banks; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.banks (id, bank_name, branch, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3698 (class 0 OID 17054)
+-- Dependencies: 218
+-- Data for Name: company_bank_accounts; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.company_bank_accounts (id, bank_id, account_number, account_name, opening_balance, current_balance, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3731 (class 0 OID 17359)
+-- Dependencies: 251
+-- Data for Name: contract_items; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.contract_items (contract_id, requirements, service_category, unit_cost, requirement_type) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3739 (class 0 OID 17442)
+-- Dependencies: 259
+-- Data for Name: contracts; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.contracts (contract_id, project_id, contract_name, customer_name, description, initial_cost_budget, extra_budget_allocation, payment_type, status, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3735 (class 0 OID 17383)
+-- Dependencies: 255
+-- Data for Name: employees; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.employees (id, name, email, phone, role, department, hire_date, salary, is_active, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3718 (class 0 OID 17236)
+-- Dependencies: 238
+-- Data for Name: note_shares; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.note_shares (id, note_id, shared_with_user_id, permission, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3716 (class 0 OID 17218)
+-- Dependencies: 236
+-- Data for Name: notes; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.notes (id, user_id, title, content, color, is_pinned, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3724 (class 0 OID 17302)
+-- Dependencies: 244
+-- Data for Name: password_history; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.password_history (id, user_id, password_hash, created_at) FROM stdin;
+1	3	$2b$10$rxFU3nwSm2sgjRkh.0gVdu129IoTpD8VtWD5TGRDvQGZCZDbbW9v2	2026-02-03 23:43:44.987003
+2	2	$2b$10$lp5m5lPyqFDHeLgXSVXBJeh7yrSqXw37DKCkhksHm8NDDUiuJyu9S	2026-02-03 23:43:53.761945
+\.
+
+
+--
+-- TOC entry 3704 (class 0 OID 17104)
+-- Dependencies: 224
+-- Data for Name: payables; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.payables (payable_id, vendor_id, payable_name, description, payable_type, amount, frequency, start_date, end_date, contract_id, is_active, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3710 (class 0 OID 17154)
+-- Dependencies: 230
+-- Data for Name: permissions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.permissions (id, resource, action, description, created_at) FROM stdin;
+1	employees	create	Create new employees	2026-02-03 03:17:48.796305
+2	employees	read	View employee information	2026-02-03 03:17:48.801714
+3	employees	update	Update employee details	2026-02-03 03:17:48.803376
+4	employees	delete	Delete employees	2026-02-03 03:17:48.804639
+5	projects	create	Create new projects	2026-02-03 03:17:48.805977
+6	projects	read	View project information	2026-02-03 03:17:48.807131
+7	projects	update	Update project details	2026-02-03 03:17:48.808396
+8	projects	delete	Delete projects	2026-02-03 03:17:48.809657
+9	accounts	create	Create bank accounts	2026-02-03 03:17:48.811061
+10	accounts	read	View account information	2026-02-03 03:17:48.81244
+11	accounts	update	Update account details	2026-02-03 03:17:48.813695
+12	accounts	delete	Delete accounts	2026-02-03 03:17:48.814766
+13	payables	create	Create payable bills	2026-02-03 03:17:48.816059
+14	payables	read	View payable information	2026-02-03 03:17:48.817133
+15	payables	update	Update payable details	2026-02-03 03:17:48.818206
+16	payables	delete	Delete payables	2026-02-03 03:17:48.819168
+17	receivables	create	Create receivable bills	2026-02-03 03:17:48.820246
+18	receivables	read	View receivable information	2026-02-03 03:17:48.821359
+19	receivables	update	Update receivable details	2026-02-03 03:17:48.822485
+20	receivables	delete	Delete receivables	2026-02-03 03:17:48.823571
+21	assets	create	Create assets	2026-02-03 03:17:48.824726
+22	assets	read	View asset information	2026-02-03 03:17:48.825813
+23	assets	update	Update asset details	2026-02-03 03:17:48.826879
+24	assets	delete	Delete assets	2026-02-03 03:17:48.827866
+25	vendors	create	Create vendors	2026-02-03 03:17:48.828876
+26	vendors	read	View vendor information	2026-02-03 03:17:48.830022
+27	vendors	update	Update vendor details	2026-02-03 03:17:48.831099
+28	vendors	delete	Delete vendors	2026-02-03 03:17:48.832153
+29	analytics	read	View analytics and reports	2026-02-03 03:17:48.833203
+30	settings	read	View settings	2026-02-03 03:17:48.834264
+31	settings	manage	Manage roles and permissions	2026-02-03 03:17:48.835285
+\.
+
+
+--
+-- TOC entry 3730 (class 0 OID 17350)
+-- Dependencies: 250
+-- Data for Name: petty_cash_account; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.petty_cash_account (id, account_name, current_balance, updated_at) FROM stdin;
+1	Petty Cash	0.00	2026-02-04 00:22:28.34565
+\.
+
+
+--
+-- TOC entry 3733 (class 0 OID 17372)
+-- Dependencies: 253
+-- Data for Name: petty_cash_transactions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.petty_cash_transactions (id, transaction_type, amount, description, category, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3737 (class 0 OID 17431)
+-- Dependencies: 257
+-- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.projects (project_id, project_name, project_description, status, created_at) FROM stdin;
+1	Bloom Swift POS	POS systems	active	2026-02-04 00:58:09.555547
+2	Bloom Audit	Audit Program	active	2026-02-04 03:05:45.66073
+\.
+
+
+--
+-- TOC entry 3713 (class 0 OID 17187)
+-- Dependencies: 233
+-- Data for Name: rbac_audit_log; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.rbac_audit_log (id, user_id, action, details, ip_address, created_at) FROM stdin;
+1	1	DELETE_ROLE	{"roleId": "4", "roleName": "Project Manager"}	\N	2026-02-03 04:59:55.658503
+2	1	DELETE_ROLE	{"roleId": "5", "roleName": "Viewer"}	\N	2026-02-03 04:59:59.164987
+3	1	CREATE_ROLE	{"roleId": 6, "roleName": "senior admin"}	\N	2026-02-03 05:57:08.802957
+4	1	CREATE_USER	{"roleIds": [1], "emailSent": false, "newUserId": 2, "newUserEmail": "dilantha@bloomtech.lk"}	\N	2026-02-03 22:52:45.301595
+5	2	CREATE_USER	{"roleIds": [3], "emailSent": false, "newUserId": 3, "newUserEmail": "hiru@bloomtech.lk"}	\N	2026-02-03 22:53:32.960574
+6	1	RESET_USER_PASSWORD	{"emailSent": true, "targetUserId": 3, "targetUserEmail": "hiru@bloomtech.lk"}	\N	2026-02-03 23:43:45.824262
+7	1	RESET_USER_PASSWORD	{"emailSent": true, "targetUserId": 2, "targetUserEmail": "dilantha@bloomtech.lk"}	\N	2026-02-03 23:43:54.113542
+\.
+
+
+--
+-- TOC entry 3726 (class 0 OID 17319)
+-- Dependencies: 246
+-- Data for Name: receivables; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.receivables (receivable_id, payer_name, receivable_name, description, receivable_type, amount, frequency, start_date, end_date, contract_id, is_active, bank_account_id, payment_method, reference_number, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3711 (class 0 OID 17165)
+-- Dependencies: 231
+-- Data for Name: role_permissions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.role_permissions (role_id, permission_id, created_at) FROM stdin;
+1	1	2026-02-03 03:17:48.844305
+1	2	2026-02-03 03:17:48.846002
+1	3	2026-02-03 03:17:48.847268
+1	4	2026-02-03 03:17:48.84857
+1	5	2026-02-03 03:17:48.849672
+1	6	2026-02-03 03:17:48.850787
+1	7	2026-02-03 03:17:48.852049
+1	8	2026-02-03 03:17:48.853279
+1	9	2026-02-03 03:17:48.8544
+1	10	2026-02-03 03:17:48.855545
+1	11	2026-02-03 03:17:48.85667
+1	12	2026-02-03 03:17:48.857571
+1	13	2026-02-03 03:17:48.858614
+1	14	2026-02-03 03:17:48.859626
+1	15	2026-02-03 03:17:48.860656
+1	16	2026-02-03 03:17:48.861609
+1	17	2026-02-03 03:17:48.862706
+1	18	2026-02-03 03:17:48.863733
+1	19	2026-02-03 03:17:48.864825
+1	20	2026-02-03 03:17:48.865925
+1	21	2026-02-03 03:17:48.867194
+1	22	2026-02-03 03:17:48.868275
+1	23	2026-02-03 03:17:48.869422
+1	24	2026-02-03 03:17:48.870534
+1	25	2026-02-03 03:17:48.87163
+1	26	2026-02-03 03:17:48.872631
+1	27	2026-02-03 03:17:48.873721
+1	28	2026-02-03 03:17:48.874854
+1	29	2026-02-03 03:17:48.876013
+1	30	2026-02-03 03:17:48.877167
+1	31	2026-02-03 03:17:48.878268
+2	1	2026-02-03 03:17:48.879604
+2	2	2026-02-03 03:17:48.880782
+2	3	2026-02-03 03:17:48.881996
+2	4	2026-02-03 03:17:48.883198
+2	5	2026-02-03 03:17:48.884286
+2	6	2026-02-03 03:17:48.88539
+2	7	2026-02-03 03:17:48.886461
+2	8	2026-02-03 03:17:48.887688
+2	25	2026-02-03 03:17:48.888798
+2	26	2026-02-03 03:17:48.889955
+2	27	2026-02-03 03:17:48.890994
+2	28	2026-02-03 03:17:48.892063
+2	9	2026-02-03 03:17:48.893015
+2	10	2026-02-03 03:17:48.894037
+2	11	2026-02-03 03:17:48.894989
+2	12	2026-02-03 03:17:48.895992
+2	13	2026-02-03 03:17:48.897044
+2	14	2026-02-03 03:17:48.898095
+2	15	2026-02-03 03:17:48.899148
+2	16	2026-02-03 03:17:48.900156
+2	17	2026-02-03 03:17:48.901068
+2	18	2026-02-03 03:17:48.902233
+2	19	2026-02-03 03:17:48.903345
+2	20	2026-02-03 03:17:48.904418
+2	21	2026-02-03 03:17:48.905468
+2	22	2026-02-03 03:17:48.906561
+2	23	2026-02-03 03:17:48.907502
+2	24	2026-02-03 03:17:48.908507
+2	29	2026-02-03 03:17:48.9095
+2	30	2026-02-03 03:17:48.910593
+3	9	2026-02-03 03:17:48.911618
+3	10	2026-02-03 03:17:48.912709
+3	11	2026-02-03 03:17:48.913675
+3	12	2026-02-03 03:17:48.914645
+3	13	2026-02-03 03:17:48.915547
+3	14	2026-02-03 03:17:48.916552
+3	15	2026-02-03 03:17:48.918394
+3	16	2026-02-03 03:17:48.919339
+3	17	2026-02-03 03:17:48.920271
+3	18	2026-02-03 03:17:48.924165
+3	19	2026-02-03 03:17:48.925196
+3	20	2026-02-03 03:17:48.926139
+3	21	2026-02-03 03:17:48.927085
+3	22	2026-02-03 03:17:48.927995
+3	23	2026-02-03 03:17:48.929007
+3	24	2026-02-03 03:17:48.930138
+3	26	2026-02-03 03:17:48.931245
+3	2	2026-02-03 03:17:48.932354
+3	6	2026-02-03 03:17:48.9336
+3	29	2026-02-03 03:17:48.934857
+\.
+
+
+--
+-- TOC entry 3708 (class 0 OID 17140)
+-- Dependencies: 228
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.roles (id, name, description, is_system_role, created_at, updated_at) FROM stdin;
+1	Super Admin	Full system access with all permissions	t	2026-02-03 03:17:48.836699	2026-02-03 03:17:48.836699
+2	Admin	Administrative access to most resources	f	2026-02-03 03:17:48.838474	2026-02-03 03:17:48.838474
+3	Accountant	Full access to accounting modules	f	2026-02-03 03:17:48.839657	2026-02-03 03:17:48.839657
+6	senior admin	\N	f	2026-02-03 05:57:08.798465	2026-02-03 05:57:08.798465
+\.
+
+
+--
+-- TOC entry 3722 (class 0 OID 17278)
+-- Dependencies: 242
+-- Data for Name: todo_shares; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.todo_shares (id, todo_id, shared_with_user_id, permission, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3720 (class 0 OID 17258)
+-- Dependencies: 240
+-- Data for Name: todos; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.todos (id, user_id, title, description, status, priority, due_date, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3714 (class 0 OID 17201)
+-- Dependencies: 234
+-- Data for Name: user_roles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.user_roles (user_id, role_id, created_at) FROM stdin;
+1	1	2026-02-03 05:38:09.508775
+2	1	2026-02-03 22:52:45.299758
+3	3	2026-02-03 22:53:32.958813
+\.
+
+
+--
+-- TOC entry 3706 (class 0 OID 17127)
+-- Dependencies: 226
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, name, email, password_hash, role, created_at, password_must_change) FROM stdin;
+1	admin	admin@example.com	$2b$10$brPOk7656qJFF3GCWJMofeoHSVa4rmc5WwpFdabVWMvBW6IS6rGR2	admin	2026-02-03 03:01:01.276958	f
+3	hiru@bloomtech.lk	hiru@bloomtech.lk	$2b$10$rxFU3nwSm2sgjRkh.0gVdu129IoTpD8VtWD5TGRDvQGZCZDbbW9v2	user	2026-02-03 22:53:32.954627	t
+2	dilantha@bloomtech.lk	dilantha@bloomtech.lk	$2b$10$lp5m5lPyqFDHeLgXSVXBJeh7yrSqXw37DKCkhksHm8NDDUiuJyu9S	user	2026-02-03 22:52:45.295517	t
+\.
+
+
+--
+-- TOC entry 3702 (class 0 OID 17095)
+-- Dependencies: 222
+-- Data for Name: vendors; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.vendors (vendor_id, vendor_name, contact_email, contact_phone, is_active, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3767 (class 0 OID 0)
+-- Dependencies: 247
+-- Name: assets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.assets_id_seq', 1, false);
+
+
+--
+-- TOC entry 3768 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: bank_transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.bank_transactions_id_seq', 1, false);
+
+
+--
+-- TOC entry 3769 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: banks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.banks_id_seq', 1, false);
+
+
+--
+-- TOC entry 3770 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: company_bank_accounts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.company_bank_accounts_id_seq', 1, false);
+
+
+--
+-- TOC entry 3771 (class 0 OID 0)
+-- Dependencies: 258
+-- Name: contracts_contract_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.contracts_contract_id_seq', 1, true);
+
+
+--
+-- TOC entry 3772 (class 0 OID 0)
+-- Dependencies: 254
+-- Name: employees_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.employees_id_seq', 1, false);
+
+
+--
+-- TOC entry 3773 (class 0 OID 0)
+-- Dependencies: 237
+-- Name: note_shares_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.note_shares_id_seq', 1, false);
+
+
+--
+-- TOC entry 3774 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: notes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.notes_id_seq', 1, true);
+
+
+--
+-- TOC entry 3775 (class 0 OID 0)
+-- Dependencies: 243
+-- Name: password_history_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.password_history_id_seq', 2, true);
+
+
+--
+-- TOC entry 3776 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: payables_payable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.payables_payable_id_seq', 1, false);
+
+
+--
+-- TOC entry 3777 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.permissions_id_seq', 31, true);
+
+
+--
+-- TOC entry 3778 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: petty_cash_account_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.petty_cash_account_id_seq', 1, true);
+
+
+--
+-- TOC entry 3779 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: petty_cash_transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.petty_cash_transactions_id_seq', 1, false);
+
+
+--
+-- TOC entry 3780 (class 0 OID 0)
+-- Dependencies: 256
+-- Name: projects_project_id_seq1; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.projects_project_id_seq1', 2, true);
+
+
+--
+-- TOC entry 3781 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: rbac_audit_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.rbac_audit_log_id_seq', 7, true);
+
+
+--
+-- TOC entry 3782 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: receivables_receivable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.receivables_receivable_id_seq', 1, false);
+
+
+--
+-- TOC entry 3783 (class 0 OID 0)
+-- Dependencies: 227
+-- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.roles_id_seq', 6, true);
+
+
+--
+-- TOC entry 3784 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: todo_shares_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.todo_shares_id_seq', 1, false);
+
+
+--
+-- TOC entry 3785 (class 0 OID 0)
+-- Dependencies: 239
+-- Name: todos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.todos_id_seq', 1, true);
+
+
+--
+-- TOC entry 3786 (class 0 OID 0)
+-- Dependencies: 225
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+
+
+--
+-- TOC entry 3787 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: vendors_vendor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.vendors_vendor_id_seq', 1, false);
+
+
+--
+-- TOC entry 3519 (class 2606 OID 17348)
+-- Name: assets assets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT assets_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3477 (class 2606 OID 17079)
+-- Name: bank_transactions bank_transactions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bank_transactions
+    ADD CONSTRAINT bank_transactions_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3471 (class 2606 OID 17052)
+-- Name: banks banks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.banks
+    ADD CONSTRAINT banks_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3473 (class 2606 OID 17062)
+-- Name: company_bank_accounts company_bank_accounts_account_number_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_bank_accounts
+    ADD CONSTRAINT company_bank_accounts_account_number_key UNIQUE (account_number);
+
+
+--
+-- TOC entry 3475 (class 2606 OID 17060)
+-- Name: company_bank_accounts company_bank_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_bank_accounts
+    ADD CONSTRAINT company_bank_accounts_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3531 (class 2606 OID 17453)
+-- Name: contracts contracts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_pkey PRIMARY KEY (contract_id);
+
+
+--
+-- TOC entry 3527 (class 2606 OID 17390)
+-- Name: employees employees_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employees
+    ADD CONSTRAINT employees_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3503 (class 2606 OID 17244)
+-- Name: note_shares note_shares_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.note_shares
+    ADD CONSTRAINT note_shares_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3501 (class 2606 OID 17229)
+-- Name: notes notes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3515 (class 2606 OID 17310)
+-- Name: password_history password_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.password_history
+    ADD CONSTRAINT password_history_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3481 (class 2606 OID 17115)
+-- Name: payables payables_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payables
+    ADD CONSTRAINT payables_pkey PRIMARY KEY (payable_id);
+
+
+--
+-- TOC entry 3491 (class 2606 OID 17162)
+-- Name: permissions permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.permissions
+    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3493 (class 2606 OID 17164)
+-- Name: permissions permissions_resource_action_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.permissions
+    ADD CONSTRAINT permissions_resource_action_key UNIQUE (resource, action);
+
+
+--
+-- TOC entry 3521 (class 2606 OID 17358)
+-- Name: petty_cash_account petty_cash_account_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.petty_cash_account
+    ADD CONSTRAINT petty_cash_account_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3525 (class 2606 OID 17381)
+-- Name: petty_cash_transactions petty_cash_transactions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.petty_cash_transactions
+    ADD CONSTRAINT petty_cash_transactions_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3523 (class 2606 OID 17365)
+-- Name: contract_items project_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contract_items
+    ADD CONSTRAINT project_items_pkey PRIMARY KEY (contract_id, requirements);
+
+
+--
+-- TOC entry 3529 (class 2606 OID 17440)
+-- Name: projects projects_pkey1; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_pkey1 PRIMARY KEY (project_id);
+
+
+--
+-- TOC entry 3497 (class 2606 OID 17195)
+-- Name: rbac_audit_log rbac_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.rbac_audit_log
+    ADD CONSTRAINT rbac_audit_log_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3517 (class 2606 OID 17328)
+-- Name: receivables receivables_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.receivables
+    ADD CONSTRAINT receivables_pkey PRIMARY KEY (receivable_id);
+
+
+--
+-- TOC entry 3495 (class 2606 OID 17170)
+-- Name: role_permissions role_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.role_permissions
+    ADD CONSTRAINT role_permissions_pkey PRIMARY KEY (role_id, permission_id);
+
+
+--
+-- TOC entry 3487 (class 2606 OID 17152)
+-- Name: roles roles_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles
+    ADD CONSTRAINT roles_name_key UNIQUE (name);
+
+
+--
+-- TOC entry 3489 (class 2606 OID 17150)
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles
+    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3509 (class 2606 OID 17286)
+-- Name: todo_shares todo_shares_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todo_shares
+    ADD CONSTRAINT todo_shares_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3507 (class 2606 OID 17271)
+-- Name: todos todos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todos
+    ADD CONSTRAINT todos_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3505 (class 2606 OID 17246)
+-- Name: note_shares unique_note_share; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.note_shares
+    ADD CONSTRAINT unique_note_share UNIQUE (note_id, shared_with_user_id);
+
+
+--
+-- TOC entry 3511 (class 2606 OID 17288)
+-- Name: todo_shares unique_todo_share; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todo_shares
+    ADD CONSTRAINT unique_todo_share UNIQUE (todo_id, shared_with_user_id);
+
+
+--
+-- TOC entry 3499 (class 2606 OID 17206)
+-- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_roles
+    ADD CONSTRAINT user_roles_pkey PRIMARY KEY (user_id, role_id);
+
+
+--
+-- TOC entry 3483 (class 2606 OID 17138)
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- TOC entry 3485 (class 2606 OID 17136)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3479 (class 2606 OID 17102)
+-- Name: vendors vendors_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.vendors
+    ADD CONSTRAINT vendors_pkey PRIMARY KEY (vendor_id);
+
+
+--
+-- TOC entry 3512 (class 1259 OID 17317)
+-- Name: idx_password_history_created_at; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_password_history_created_at ON public.password_history USING btree (created_at DESC);
+
+
+--
+-- TOC entry 3513 (class 1259 OID 17316)
+-- Name: idx_password_history_user_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_password_history_user_id ON public.password_history USING btree (user_id);
+
+
+--
+-- TOC entry 3550 (class 2606 OID 17459)
+-- Name: contract_items contract_items_contract_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contract_items
+    ADD CONSTRAINT contract_items_contract_id_fkey FOREIGN KEY (contract_id) REFERENCES public.contracts(contract_id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3551 (class 2606 OID 17454)
+-- Name: contracts contracts_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(project_id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3538 (class 2606 OID 17196)
+-- Name: rbac_audit_log fk_audit_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.rbac_audit_log
+    ADD CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3532 (class 2606 OID 17063)
+-- Name: company_bank_accounts fk_bank_account_bank; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_bank_accounts
+    ADD CONSTRAINT fk_bank_account_bank FOREIGN KEY (bank_id) REFERENCES public.banks(id);
+
+
+--
+-- TOC entry 3533 (class 2606 OID 17080)
+-- Name: bank_transactions fk_bank_transaction_account; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bank_transactions
+    ADD CONSTRAINT fk_bank_transaction_account FOREIGN KEY (bank_account_id) REFERENCES public.company_bank_accounts(id);
+
+
+--
+-- TOC entry 3542 (class 2606 OID 17247)
+-- Name: note_shares fk_note_share_note; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.note_shares
+    ADD CONSTRAINT fk_note_share_note FOREIGN KEY (note_id) REFERENCES public.notes(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3543 (class 2606 OID 17252)
+-- Name: note_shares fk_note_share_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.note_shares
+    ADD CONSTRAINT fk_note_share_user FOREIGN KEY (shared_with_user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3541 (class 2606 OID 17230)
+-- Name: notes fk_note_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT fk_note_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3547 (class 2606 OID 17311)
+-- Name: password_history fk_password_history_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.password_history
+    ADD CONSTRAINT fk_password_history_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3534 (class 2606 OID 17464)
+-- Name: payables fk_payables_contract; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payables
+    ADD CONSTRAINT fk_payables_contract FOREIGN KEY (contract_id) REFERENCES public.contracts(contract_id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3535 (class 2606 OID 17116)
+-- Name: payables fk_payables_vendor; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payables
+    ADD CONSTRAINT fk_payables_vendor FOREIGN KEY (vendor_id) REFERENCES public.vendors(vendor_id);
+
+
+--
+-- TOC entry 3536 (class 2606 OID 17176)
+-- Name: role_permissions fk_permission; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.role_permissions
+    ADD CONSTRAINT fk_permission FOREIGN KEY (permission_id) REFERENCES public.permissions(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3548 (class 2606 OID 17469)
+-- Name: receivables fk_receivables_contract; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.receivables
+    ADD CONSTRAINT fk_receivables_contract FOREIGN KEY (contract_id) REFERENCES public.contracts(contract_id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3537 (class 2606 OID 17171)
+-- Name: role_permissions fk_role; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.role_permissions
+    ADD CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3545 (class 2606 OID 17289)
+-- Name: todo_shares fk_todo_share_todo; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todo_shares
+    ADD CONSTRAINT fk_todo_share_todo FOREIGN KEY (todo_id) REFERENCES public.todos(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3546 (class 2606 OID 17294)
+-- Name: todo_shares fk_todo_share_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todo_shares
+    ADD CONSTRAINT fk_todo_share_user FOREIGN KEY (shared_with_user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3544 (class 2606 OID 17272)
+-- Name: todos fk_todo_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.todos
+    ADD CONSTRAINT fk_todo_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3539 (class 2606 OID 17212)
+-- Name: user_roles fk_user_roles_role; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_roles
+    ADD CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3540 (class 2606 OID 17207)
+-- Name: user_roles fk_user_roles_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_roles
+    ADD CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3549 (class 2606 OID 17329)
+-- Name: receivables receivables_bank_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.receivables
+    ADD CONSTRAINT receivables_bank_account_id_fkey FOREIGN KEY (bank_account_id) REFERENCES public.company_bank_accounts(id);
+
+
+-- Completed on 2026-02-04 13:29:16 CST
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict wP4JadfC6mPtxPJe6YmpJqTFANhFeCes1UhzlaIC4HQyXp7HTpnGPrPchaoQfRP
+
