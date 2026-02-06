@@ -10,46 +10,46 @@ async function main() {
     { resource: 'employees', action: 'read', description: 'View employee information' },
     { resource: 'employees', action: 'update', description: 'Update employee details' },
     { resource: 'employees', action: 'delete', description: 'Delete employees' },
-    
+
     // Projects
     { resource: 'projects', action: 'create', description: 'Create new projects' },
     { resource: 'projects', action: 'read', description: 'View project information' },
     { resource: 'projects', action: 'update', description: 'Update project details' },
     { resource: 'projects', action: 'delete', description: 'Delete projects' },
-    
+
     // Accounts
     { resource: 'accounts', action: 'create', description: 'Create bank accounts' },
     { resource: 'accounts', action: 'read', description: 'View account information' },
     { resource: 'accounts', action: 'update', description: 'Update account details' },
     { resource: 'accounts', action: 'delete', description: 'Delete accounts' },
-    
+
     // Payables
     { resource: 'payables', action: 'create', description: 'Create payable bills' },
     { resource: 'payables', action: 'read', description: 'View payable information' },
     { resource: 'payables', action: 'update', description: 'Update payable details' },
     { resource: 'payables', action: 'delete', description: 'Delete payables' },
-    
+
     // Receivables
     { resource: 'receivables', action: 'create', description: 'Create receivable bills' },
     { resource: 'receivables', action: 'read', description: 'View receivable information' },
     { resource: 'receivables', action: 'update', description: 'Update receivable details' },
     { resource: 'receivables', action: 'delete', description: 'Delete receivables' },
-    
+
     // Assets
     { resource: 'assets', action: 'create', description: 'Create assets' },
     { resource: 'assets', action: 'read', description: 'View asset information' },
     { resource: 'assets', action: 'update', description: 'Update asset details' },
     { resource: 'assets', action: 'delete', description: 'Delete assets' },
-    
+
     // Vendors
     { resource: 'vendors', action: 'create', description: 'Create vendors' },
     { resource: 'vendors', action: 'read', description: 'View vendor information' },
     { resource: 'vendors', action: 'update', description: 'Update vendor details' },
     { resource: 'vendors', action: 'delete', description: 'Delete vendors' },
-    
+
     // Analytics
     { resource: 'analytics', action: 'read', description: 'View analytics and reports' },
-    
+
     // Settings
     { resource: 'settings', action: 'read', description: 'View settings' },
     { resource: 'settings', action: 'manage', description: 'Manage roles and permissions' },
@@ -125,6 +125,7 @@ async function main() {
     'assets:create', 'assets:read', 'assets:update', 'assets:delete',
     'analytics:read',
     'settings:read',
+    'settings:manage',
   ]
   for (const perm of adminPerms) {
     if (permissionMap[perm]) {
@@ -145,8 +146,6 @@ async function main() {
     'receivables:create', 'receivables:read', 'receivables:update', 'receivables:delete',
     'assets:create', 'assets:read', 'assets:update', 'assets:delete',
     'vendors:read',
-    'employees:read',
-    'projects:read',
     'analytics:read',
   ]
   for (const perm of accountantPerms) {
@@ -207,11 +206,14 @@ async function main() {
   console.log(`✅ Viewer: ${viewerPerms.length} permissions`)
 
   // Update existing admin user to have Super Admin role
-  await pool.query(
-    `UPDATE users SET role_id = $1 WHERE email = 'admin@example.com' OR name = 'admin'`,
-    [roleIds['Super Admin']]
-  )
-  console.log('✅ Admin user updated with Super Admin role')
+  const adminUser = await pool.query(`SELECT id FROM users WHERE email = 'admin@example.com' OR name = 'admin' LIMIT 1`)
+  if (adminUser.rows.length > 0) {
+    await pool.query(
+      `INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [adminUser.rows[0].id, roleIds['Super Admin']]
+    )
+    console.log('✅ Admin user assigned Super Admin role')
+  }
 
   console.log('🎉 RBAC seeding completed successfully!')
 }

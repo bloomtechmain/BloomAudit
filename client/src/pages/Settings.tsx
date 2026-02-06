@@ -29,7 +29,7 @@ type User = {
 
 export default function Settings({ accessToken }: { accessToken: string }) {
   const [subTab, setSubTab] = useState<'roles' | 'permissions' | 'users' | 'profile' | 'app_settings'>('roles')
-  
+
   // Roles state
   const [roles, setRoles] = useState<Role[]>([])
   const [rolesLoading, setRolesLoading] = useState(false)
@@ -37,20 +37,20 @@ export default function Settings({ accessToken }: { accessToken: string }) {
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [roleName, setRoleName] = useState('')
   const [roleDescription, setRoleDescription] = useState('')
-  
+
   // Permissions state
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [permissionsLoading, setPermissionsLoading] = useState(false)
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [rolePermissions, setRolePermissions] = useState<number[]>([])
   const [saving, setSaving] = useState(false)
-  
+
   // Users state
   const [users, setUsers] = useState<User[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
   const [assigningUser, setAssigningUser] = useState<User | null>(null)
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([])
-  
+
   // Create user state
   const [isCreatingUser, setIsCreatingUser] = useState(false)
   const [newUserEmail, setNewUserEmail] = useState('')
@@ -58,12 +58,12 @@ export default function Settings({ accessToken }: { accessToken: string }) {
   const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(null)
   const [emailSentStatus, setEmailSentStatus] = useState<{ sent: boolean; error?: string } | null>(null)
   const [copied, setCopied] = useState(false)
-  
+
   // Reset password state
   const [resettingUser, setResettingUser] = useState<User | null>(null)
-  const [resetPasswordResult, setResetPasswordResult] = useState<{password: string; emailSent: boolean; error?: string} | null>(null)
+  const [resetPasswordResult, setResetPasswordResult] = useState<{ password: string; emailSent: boolean; error?: string } | null>(null)
   const [resetCopied, setResetCopied] = useState(false)
-  
+
   // Profile/change password state
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -71,14 +71,14 @@ export default function Settings({ accessToken }: { accessToken: string }) {
   const [changingPassword, setChangingPassword] = useState(false)
   const [passwordChangeError, setPasswordChangeError] = useState('')
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false)
-  
+
   // Application Settings state
   const [applicationTimezone, setApplicationTimezone] = useState('America/New_York')
   const [timezoneLoading, setTimezoneLoading] = useState(false)
   const [timezoneSaving, setTimezoneSaving] = useState(false)
   const [timezoneSaveSuccess, setTimezoneSaveSuccess] = useState(false)
   const [timezoneSaveError, setTimezoneSaveError] = useState('')
-  
+
   // Popular timezone options
   const timezoneOptions = [
     { value: 'America/New_York', label: 'New York (EST/EDT)' },
@@ -97,7 +97,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
     { value: 'Australia/Sydney', label: 'Sydney (AEDT/AEST)' },
     { value: 'Pacific/Auckland', label: 'Auckland (NZDT/NZST)' }
   ]
-  
+
   // Fetch roles
   const fetchRoles = async () => {
     setRolesLoading(true)
@@ -115,7 +115,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setRolesLoading(false)
     }
   }
-  
+
   // Fetch permissions
   const fetchPermissions = async () => {
     setPermissionsLoading(true)
@@ -133,7 +133,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setPermissionsLoading(false)
     }
   }
-  
+
   // Fetch role permissions
   const fetchRolePermissions = async (roleId: number) => {
     try {
@@ -148,7 +148,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       console.error('Error fetching role permissions:', e)
     }
   }
-  
+
   // Fetch users
   const fetchUsers = async () => {
     setUsersLoading(true)
@@ -166,7 +166,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setUsersLoading(false)
     }
   }
-  
+
   // Fetch application timezone setting
   const fetchApplicationTimezone = async () => {
     setTimezoneLoading(true)
@@ -186,13 +186,13 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setTimezoneLoading(false)
     }
   }
-  
+
   // Save timezone setting
   const handleSaveTimezone = async () => {
     setTimezoneSaveError('')
     setTimezoneSaveSuccess(false)
     setTimezoneSaving(true)
-    
+
     try {
       const r = await fetch(`${API_URL}/settings/international_timezone`, {
         method: 'PUT',
@@ -202,7 +202,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
         },
         body: JSON.stringify({ value: applicationTimezone })
       })
-      
+
       if (r.ok) {
         setTimezoneSaveSuccess(true)
         setTimeout(() => setTimezoneSaveSuccess(false), 3000)
@@ -217,7 +217,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setTimezoneSaving(false)
     }
   }
-  
+
   useEffect(() => {
     if (subTab === 'roles') {
       fetchRoles()
@@ -231,11 +231,11 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       fetchApplicationTimezone()
     }
   }, [subTab])
-  
+
   // Create role
   const handleCreateRole = async () => {
     if (!roleName) return alert('Role name is required')
-    
+
     setSaving(true)
     try {
       const r = await fetch(`${API_URL}/rbac/roles`, {
@@ -246,7 +246,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
         },
         body: JSON.stringify({ name: roleName, description: roleDescription })
       })
-      
+
       if (r.ok) {
         setIsAddingRole(false)
         setRoleName('')
@@ -263,11 +263,11 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setSaving(false)
     }
   }
-  
+
   // Update role
   const handleUpdateRole = async () => {
     if (!editingRole || !roleName) return
-    
+
     setSaving(true)
     try {
       const r = await fetch(`${API_URL}/rbac/roles/${editingRole.id}`, {
@@ -278,7 +278,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
         },
         body: JSON.stringify({ name: roleName, description: roleDescription })
       })
-      
+
       if (r.ok) {
         setEditingRole(null)
         setRoleName('')
@@ -295,17 +295,17 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setSaving(false)
     }
   }
-  
+
   // Delete role
   const handleDeleteRole = async (role: Role) => {
     if (!confirm(`Delete role "${role.name}"? This cannot be undone.`)) return
-    
+
     try {
       const r = await fetch(`${API_URL}/rbac/roles/${role.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${accessToken}` }
       })
-      
+
       if (r.ok) {
         fetchRoles()
       } else {
@@ -317,11 +317,11 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       alert('Error deleting role')
     }
   }
-  
+
   // Save permissions
   const handleSavePermissions = async () => {
     if (!selectedRole) return
-    
+
     setSaving(true)
     try {
       const r = await fetch(`${API_URL}/rbac/roles/${selectedRole.id}/permissions`, {
@@ -332,7 +332,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
         },
         body: JSON.stringify({ permissionIds: rolePermissions })
       })
-      
+
       if (r.ok) {
         alert('Permissions updated successfully')
         fetchRoles()
@@ -347,11 +347,11 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setSaving(false)
     }
   }
-  
+
   // Assign roles to user
   const handleAssignRoles = async () => {
     if (!assigningUser) return
-    
+
     setSaving(true)
     try {
       const r = await fetch(`${API_URL}/rbac/users/${assigningUser.id}/roles`, {
@@ -362,7 +362,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
         },
         body: JSON.stringify({ roleIds: selectedRoleIds })
       })
-      
+
       if (r.ok) {
         setAssigningUser(null)
         setSelectedRoleIds([])
@@ -378,17 +378,17 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setSaving(false)
     }
   }
-  
+
   // Create user
   const handleCreateUser = async () => {
     if (!newUserEmail) {
       return alert('Email is required')
     }
-    
+
     if (newUserRoleIds.length === 0) {
       return alert('At least one role must be selected')
     }
-    
+
     setSaving(true)
     try {
       const r = await fetch(`${API_URL}/rbac/users`, {
@@ -399,7 +399,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
         },
         body: JSON.stringify({ email: newUserEmail, roleIds: newUserRoleIds })
       })
-      
+
       if (r.ok) {
         const data = await r.json()
         setCreatedUserPassword(data.temporaryPassword)
@@ -419,7 +419,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setSaving(false)
     }
   }
-  
+
   // Copy password to clipboard
   const handleCopyPassword = () => {
     if (createdUserPassword) {
@@ -428,11 +428,11 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setTimeout(() => setCopied(false), 2000)
     }
   }
-  
+
   // Reset user password (admin)
   const handleResetPassword = async (user: User) => {
     if (!confirm(`Reset password for ${user.email}? A new temporary password will be generated and sent via email.`)) return
-    
+
     setSaving(true)
     try {
       const r = await fetch(`${API_URL}/rbac/users/${user.id}/reset-password`, {
@@ -442,7 +442,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           Authorization: `Bearer ${accessToken}`
         }
       })
-      
+
       if (r.ok) {
         const data = await r.json()
         setResetPasswordResult({
@@ -462,7 +462,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setSaving(false)
     }
   }
-  
+
   // Copy reset password to clipboard
   const handleCopyResetPassword = () => {
     if (resetPasswordResult?.password) {
@@ -471,27 +471,27 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setTimeout(() => setResetCopied(false), 2000)
     }
   }
-  
+
   // Change own password
   const handleChangeOwnPassword = async () => {
     setPasswordChangeError('')
     setPasswordChangeSuccess(false)
-    
+
     if (!currentPassword || !newPassword || !confirmNewPassword) {
       setPasswordChangeError('All fields are required')
       return
     }
-    
+
     if (newPassword !== confirmNewPassword) {
       setPasswordChangeError('New passwords do not match')
       return
     }
-    
+
     if (newPassword.length < 10) {
       setPasswordChangeError('Password must be at least 10 characters')
       return
     }
-    
+
     setChangingPassword(true)
     try {
       const r = await fetch(`${API_URL}/auth/change-password`, {
@@ -505,7 +505,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           newPassword
         })
       })
-      
+
       if (r.ok) {
         setPasswordChangeSuccess(true)
         setCurrentPassword('')
@@ -522,37 +522,37 @@ export default function Settings({ accessToken }: { accessToken: string }) {
       setChangingPassword(false)
     }
   }
-  
+
   const getPasswordStrength = (password: string) => {
     if (!password) return { strength: 0, text: '', color: '#ccc' }
-    
+
     let strength = 0
     if (password.length >= 10) strength++
     if (/[A-Z]/.test(password)) strength++
     if (/[a-z]/.test(password)) strength++
     if (/[0-9]/.test(password)) strength++
     if (/[^A-Za-z0-9]/.test(password)) strength++
-    
+
     if (strength < 3) return { strength, text: 'Weak', color: '#f44336' }
     if (strength < 5) return { strength, text: 'Medium', color: '#ff9800' }
     return { strength, text: 'Strong', color: '#4CAF50' }
   }
-  
+
   const passwordStrength = getPasswordStrength(newPassword)
-  
+
   // Group permissions by resource
   const groupedPermissions = permissions.reduce((acc, perm) => {
     if (!acc[perm.resource]) acc[perm.resource] = []
     acc[perm.resource].push(perm)
     return acc
   }, {} as Record<string, Permission[]>)
-  
+
   return (
     <div style={{ width: '100%', display: 'grid', gap: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ marginTop: 0, fontSize: 28, marginBottom: 0 }}>Settings</h1>
       </div>
-      
+
       {/* Sub-tabs */}
       <div style={{ display: 'flex', gap: 12, borderBottom: '2px solid #e0e0e0', paddingBottom: 8 }}>
         <button
@@ -571,7 +571,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           }}
         >
           <Shield size={18} />
-          Role Management
+          Roles
         </button>
         <button
           onClick={() => setSubTab('permissions')}
@@ -607,7 +607,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           }}
         >
           <UsersIcon size={18} />
-          User Roles
+          Users
         </button>
         <button
           onClick={() => setSubTab('profile')}
@@ -646,7 +646,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           Application Settings
         </button>
       </div>
-      
+
       {/* Role Management */}
       {subTab === 'roles' && (
         <div style={{ display: 'grid', gap: 16 }}>
@@ -671,7 +671,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               Create Role
             </button>
           </div>
-          
+
           {(isAddingRole || editingRole) && (
             <div className="glass-panel" style={{ padding: 24, borderRadius: 12 }}>
               <h3 style={{ marginTop: 0 }}>{editingRole ? 'Edit Role' : 'Create New Role'}</h3>
@@ -741,7 +741,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               </div>
             </div>
           )}
-          
+
           {rolesLoading ? (
             <div style={{ padding: 48, textAlign: 'center' }}>Loading roles...</div>
           ) : (
@@ -818,7 +818,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           )}
         </div>
       )}
-      
+
       {/* Permission Assignment */}
       {subTab === 'permissions' && (
         <div style={{ display: 'grid', gap: 16 }}>
@@ -839,7 +839,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               ))}
             </select>
           </div>
-          
+
           {selectedRole && (
             <>
               {permissionsLoading ? (
@@ -900,12 +900,12 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           )}
         </div>
       )}
-      
+
       {/* User Management */}
       {subTab === 'users' && (
         <div style={{ display: 'grid', gap: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ margin: 0 }}>Manage User Roles</h2>
+            <h2 style={{ margin: 0 }}>Manage Users</h2>
             <button
               onClick={() => setIsCreatingUser(true)}
               style={{
@@ -925,7 +925,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               Create User
             </button>
           </div>
-          
+
           {usersLoading ? (
             <div style={{ padding: 48, textAlign: 'center' }}>Loading users...</div>
           ) : (
@@ -1009,7 +1009,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               </table>
             </div>
           )}
-          
+
           {/* Create User Modal */}
           {isCreatingUser && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 1000 }} onClick={() => setIsCreatingUser(false)}>
@@ -1027,7 +1027,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                     />
                     <span style={{ fontSize: 12, color: '#666' }}>The user's email address (will also be used as username)</span>
                   </label>
-                  
+
                   <div style={{ display: 'grid', gap: 6 }}>
                     <span style={{ fontWeight: 500, marginBottom: 4 }}>Assign Roles * (select at least one)</span>
                     <div style={{ display: 'grid', gap: 10, maxHeight: 300, overflow: 'auto', padding: 8, border: '1px solid #e0e0e0', borderRadius: 8 }}>
@@ -1061,7 +1061,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                       {newUserRoleIds.length} role{newUserRoleIds.length !== 1 ? 's' : ''} selected
                     </div>
                   </div>
-                  
+
                   <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: 8, padding: 16 }}>
                     <div style={{ fontWeight: 600, color: '#856404', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                       ℹ️ Password Information
@@ -1070,7 +1070,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                       A secure temporary password will be automatically generated (10+ characters with uppercase, lowercase, numbers, and symbols) and sent to the user's email address.
                     </p>
                   </div>
-                  
+
                   <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
                     <button
                       onClick={() => {
@@ -1103,7 +1103,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               </div>
             </div>
           )}
-          
+
           {/* Success Modal - Show Created Password */}
           {createdUserPassword && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 1001 }} onClick={() => { setCreatedUserPassword(null); setEmailSentStatus(null) }}>
@@ -1119,7 +1119,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                     <p style={{ margin: 0, color: '#ff9800' }}>⚠️ User created but email could not be sent. {emailSentStatus?.error}</p>
                   )}
                 </div>
-                
+
                 <div style={{ background: '#f8f9fa', border: '2px solid #4CAF50', borderRadius: 12, padding: 20, marginBottom: 20 }}>
                   <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 15, color: '#333' }}>Temporary Password:</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', padding: 16, borderRadius: 8, border: '1px solid #e0e0e0' }}>
@@ -1147,14 +1147,14 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                     </button>
                   </div>
                 </div>
-                
+
                 <div style={{ background: '#fff3cd', borderLeft: '4px solid #ffc107', padding: 16, borderRadius: 4, marginBottom: 20 }}>
                   <div style={{ fontWeight: 600, color: '#856404', marginBottom: 8 }}>⚠️ Important</div>
                   <p style={{ margin: 0, fontSize: 13, color: '#856404', lineHeight: 1.6 }}>
                     Please save this password. For security reasons, it will not be shown again. The user should change this password after their first login.
                   </p>
                 </div>
-                
+
                 <button
                   onClick={() => {
                     setCreatedUserPassword(null)
@@ -1178,7 +1178,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               </div>
             </div>
           )}
-          
+
           {/* Assign Roles Modal */}
           {assigningUser && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 1000 }} onClick={() => setAssigningUser(null)}>
@@ -1248,7 +1248,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
               </div>
             </div>
           )}
-          
+
           {/* Reset Password Success Modal */}
           {resettingUser && resetPasswordResult && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 1001 }} onClick={() => { setResettingUser(null); setResetPasswordResult(null); setResetCopied(false) }}>
@@ -1265,7 +1265,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                     <p style={{ margin: '8px 0 0', color: '#ff9800', fontSize: 14 }}>⚠️ Email could not be sent. {resetPasswordResult.error}</p>
                   )}
                 </div>
-                
+
                 <div style={{ background: '#fff3cd', border: '2px solid #ff9800', borderRadius: 12, padding: 20, marginBottom: 20 }}>
                   <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 15, color: '#856404' }}>Temporary Password:</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', padding: 16, borderRadius: 8, border: '1px solid #e0e0e0' }}>
@@ -1293,14 +1293,14 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                     </button>
                   </div>
                 </div>
-                
+
                 <div style={{ background: '#fff3cd', borderLeft: '4px solid #ffc107', padding: 16, borderRadius: 4, marginBottom: 20 }}>
                   <div style={{ fontWeight: 600, color: '#856404', marginBottom: 8 }}>⚠️ Important</div>
                   <p style={{ margin: 0, fontSize: 13, color: '#856404', lineHeight: 1.6 }}>
                     The user will be required to change this password on their next login. Please provide them with this temporary password if the email was not delivered.
                   </p>
                 </div>
-                
+
                 <button
                   onClick={() => {
                     setResettingUser(null)
@@ -1326,22 +1326,22 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           )}
         </div>
       )}
-      
+
       {/* My Profile Tab */}
       {subTab === 'profile' && (
         <div style={{ display: 'grid', gap: 16 }}>
           <h2 style={{ margin: 0 }}>My Profile</h2>
-          
+
           <div className="glass-panel" style={{ padding: 24, borderRadius: 12 }}>
             <h3 style={{ marginTop: 0, marginBottom: 20 }}>Change Password</h3>
-            
+
             {passwordChangeSuccess && (
               <div style={{ padding: '16px', background: '#4CAF504d', border: '1px solid #4CAF50', borderRadius: 8, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <CheckCircle size={20} color="#4CAF50" />
                 <span style={{ color: '#2e7d32', fontWeight: 500 }}>Password changed successfully!</span>
               </div>
             )}
-            
+
             <div style={{ display: 'grid', gap: 16, maxWidth: 500 }}>
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontWeight: 500 }}>Current Password *</span>
@@ -1353,7 +1353,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                   style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc', fontSize: 14 }}
                 />
               </label>
-              
+
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontWeight: 500 }}>New Password *</span>
                 <input
@@ -1369,7 +1369,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                   </div>
                 )}
               </label>
-              
+
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontWeight: 500 }}>Confirm New Password *</span>
                 <input
@@ -1380,7 +1380,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                   style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc', fontSize: 14 }}
                 />
               </label>
-              
+
               <div style={{ background: '#f0f7ff', border: '1px solid #2196F3', borderRadius: 8, padding: 16, fontSize: 13 }}>
                 <strong style={{ color: '#1565c0' }}>Password Requirements:</strong>
                 <ul style={{ margin: '8px 0 0', paddingLeft: 20, color: '#1976d2' }}>
@@ -1391,13 +1391,13 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                   <li>Cannot match your last 3 passwords</li>
                 </ul>
               </div>
-              
+
               {passwordChangeError && (
                 <div style={{ padding: '12px', background: '#f443364d', border: '1px solid #f44336', borderRadius: 8, color: '#c62828', fontSize: 14 }}>
                   {passwordChangeError}
                 </div>
               )}
-              
+
               <button
                 onClick={handleChangeOwnPassword}
                 disabled={changingPassword || !currentPassword || !newPassword || !confirmNewPassword}
@@ -1423,37 +1423,37 @@ export default function Settings({ accessToken }: { accessToken: string }) {
           </div>
         </div>
       )}
-      
+
       {/* Application Settings Tab */}
       {subTab === 'app_settings' && (
         <div style={{ display: 'grid', gap: 16 }}>
           <h2 style={{ margin: 0 }}>Application Settings</h2>
-          
+
           <div className="glass-panel" style={{ padding: 24, borderRadius: 12 }}>
             <h3 style={{ marginTop: 0, marginBottom: 20 }}>International Clock Configuration</h3>
-            
+
             {timezoneSaveSuccess && (
               <div style={{ padding: '16px', background: '#4CAF504d', border: '1px solid #4CAF50', borderRadius: 8, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <CheckCircle size={20} color="#4CAF50" />
                 <span style={{ color: '#2e7d32', fontWeight: 500 }}>Timezone updated successfully! Changes will reflect on the home page.</span>
               </div>
             )}
-            
+
             {timezoneSaveError && (
               <div style={{ padding: '16px', background: '#f443364d', border: '1px solid #f44336', borderRadius: 8, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ color: '#c62828', fontWeight: 500 }}>{timezoneSaveError}</span>
               </div>
             )}
-            
+
             <div style={{ display: 'grid', gap: 16, maxWidth: 600 }}>
               <div style={{ background: '#f0f7ff', border: '1px solid #2196F3', borderRadius: 8, padding: 16, fontSize: 13 }}>
                 <strong style={{ color: '#1565c0' }}>ℹ️ About International Clock:</strong>
                 <p style={{ margin: '8px 0 0', color: '#1976d2', lineHeight: 1.6 }}>
-                  The international clock appears on the home page below the local time clock. 
+                  The international clock appears on the home page below the local time clock.
                   Select the timezone you want to display for international time tracking.
                 </p>
               </div>
-              
+
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontWeight: 500, fontSize: 15 }}>Select Timezone</span>
                 <select
@@ -1479,7 +1479,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                   Currently selected: <strong>{applicationTimezone}</strong>
                 </span>
               </label>
-              
+
               <button
                 onClick={handleSaveTimezone}
                 disabled={timezoneSaving || timezoneLoading}
@@ -1502,11 +1502,11 @@ export default function Settings({ accessToken }: { accessToken: string }) {
                 <Save size={16} />
                 {timezoneSaving ? 'Saving...' : 'Save Timezone'}
               </button>
-              
+
               <div style={{ background: '#fff3cd', borderLeft: '4px solid #ffc107', padding: 16, borderRadius: 4, fontSize: 13 }}>
                 <strong style={{ color: '#856404' }}>🔒 Permission Required:</strong>
                 <p style={{ margin: '8px 0 0', color: '#856404' }}>
-                  Only users with <code style={{ background: '#fff', padding: '2px 6px', borderRadius: 3 }}>settings:manage</code> permission 
+                  Only users with <code style={{ background: '#fff', padding: '2px 6px', borderRadius: 3 }}>settings:manage</code> permission
                   can modify application settings. This is typically SuperAdmin or Admin roles.
                 </p>
               </div>
