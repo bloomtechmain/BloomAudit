@@ -9,10 +9,10 @@ const router = Router()
 router.use(requireAuth)
 
 // GET /api/settings - Get all settings (anyone can view)
-router.get('/', getSettings)
+router.get('/', requirePermission('settings', 'read'), getSettings)
 
 // GET /api/settings/:key - Get specific setting (anyone can view)
-router.get('/:key', getSettingByKey)
+router.get('/:key', requirePermission('settings', 'read'), getSettingByKey)
 
 // PUT /api/settings/:key - Update setting (requires settings:manage permission)
 router.put('/:key', requirePermission('settings', 'manage'), updateSetting)

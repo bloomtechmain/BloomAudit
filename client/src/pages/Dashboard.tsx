@@ -11,7 +11,7 @@ import Settings from './Settings'
 import Projects from './Projects'
 import { LayoutDashboard, Users, ClipboardList, Store, FolderOpen, Banknote, Landmark, Receipt, Coins, Inbox, Plus, PlusCircle, CreditCard, Building2, ChevronLeft, ChevronRight, ChevronDown, BarChart3, Settings as SettingsIcon } from 'lucide-react'
 
-type User = { 
+type User = {
   id: number
   name: string
   email: string
@@ -143,11 +143,11 @@ type DepreciationScheduleItem = {
   isCurrent?: boolean
 }
 
-export default function Dashboard({ 
-  user, 
+export default function Dashboard({
+  user,
   accessToken,
   onLogout
-}: { 
+}: {
   user: User
   accessToken: string
   refreshToken: string
@@ -265,13 +265,13 @@ export default function Dashboard({
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
       const searchLower = employeeSearch.toLowerCase()
-      const matchesSearch = 
+      const matchesSearch =
         (emp.first_name?.toLowerCase() || '').includes(searchLower) ||
         (emp.last_name?.toLowerCase() || '').includes(searchLower) ||
         (emp.email?.toLowerCase() || '').includes(searchLower) ||
         (emp.employee_number?.toLowerCase() || '').includes(searchLower) ||
         (emp.nic?.toLowerCase() || '').includes(searchLower)
-      
+
       const matchesRole = employeeRoleFilter === 'All' || emp.role === employeeRoleFilter
       return matchesSearch && matchesRole
     })
@@ -280,17 +280,17 @@ export default function Dashboard({
   const filteredVendors = useMemo(() => {
     return (vendors || []).filter(vendor => {
       const searchLower = vendorSearch.toLowerCase()
-      const matchesSearch = 
+      const matchesSearch =
         (vendor.vendor_name?.toLowerCase() || '').includes(searchLower) ||
         (vendor.contact_email?.toLowerCase() || '').includes(searchLower) ||
         (vendor.contact_phone?.toLowerCase() || '').includes(searchLower)
-      
-      const matchesStatus = vendorStatusFilter === 'All' 
-        ? true 
-        : vendorStatusFilter === 'Active' 
-          ? vendor.is_active 
+
+      const matchesStatus = vendorStatusFilter === 'All'
+        ? true
+        : vendorStatusFilter === 'Active'
+          ? vendor.is_active
           : !vendor.is_active
-      
+
       return matchesSearch && matchesStatus
     })
   }, [vendors, vendorSearch, vendorStatusFilter])
@@ -298,17 +298,17 @@ export default function Dashboard({
   const filteredPayables = useMemo(() => {
     return payables.filter(p => {
       const searchLower = payableSearch.toLowerCase()
-      const matchesSearch = 
+      const matchesSearch =
         (p.payable_name?.toLowerCase() || '').includes(searchLower) ||
         (p.description?.toLowerCase() || '').includes(searchLower)
-      
+
       const matchesType = payableTypeFilter === 'All' || p.payable_type === payableTypeFilter
-      const matchesStatus = payableStatusFilter === 'All' 
-        ? true 
-        : payableStatusFilter === 'Active' 
-          ? p.is_active 
+      const matchesStatus = payableStatusFilter === 'All'
+        ? true
+        : payableStatusFilter === 'Active'
+          ? p.is_active
           : !p.is_active
-      
+
       return matchesSearch && matchesType && matchesStatus
     })
   }, [payables, payableSearch, payableTypeFilter, payableStatusFilter])
@@ -316,18 +316,18 @@ export default function Dashboard({
   const filteredReceivables = useMemo(() => {
     return receivables.filter(r => {
       const searchLower = receivableSearch.toLowerCase()
-      const matchesSearch = 
+      const matchesSearch =
         (r.payer_name?.toLowerCase() || '').includes(searchLower) ||
         (r.receivable_name?.toLowerCase() || '').includes(searchLower) ||
         (r.description?.toLowerCase() || '').includes(searchLower)
-      
+
       const matchesType = receivableTypeFilter === 'All' || r.receivable_type === receivableTypeFilter
-      const matchesStatus = receivableStatusFilter === 'All' 
-        ? true 
-        : receivableStatusFilter === 'Active' 
-          ? r.is_active 
+      const matchesStatus = receivableStatusFilter === 'All'
+        ? true
+        : receivableStatusFilter === 'Active'
+          ? r.is_active
           : !r.is_active
-      
+
       return matchesSearch && matchesType && matchesStatus
     })
   }, [receivables, receivableSearch, receivableTypeFilter, receivableStatusFilter])
@@ -337,6 +337,37 @@ export default function Dashboard({
   const [receivablePaymentMethod, setReceivablePaymentMethod] = useState('')
   const [receivableReferenceNumber, setReceivableReferenceNumber] = useState('')
   const [pettyCashTransactions, setPettyCashTransactions] = useState<PettyCashTransaction[]>([])
+
+  // Permission check helper
+  const hasPermission = useCallback((resource: string, action: string) => {
+    if (!user.permissions || !Array.isArray(user.permissions)) {
+      // Fallback for Super Admin if permissions are missing (e.g. legacy session)
+      if (user.roleName === 'Super Admin') return true
+      return false
+    }
+    return user.permissions.includes(`${resource}:${action}`)
+  }, [user.permissions, user.roleName])
+
+  // Redirect if accessing restricted tab
+  useEffect(() => {
+    if (tab === 'employees' && !hasPermission('employees', 'read')) setTab('home')
+    if (tab === 'projects' && !hasPermission('projects', 'read')) setTab('home')
+    if (tab === 'accounting' && !hasPermission('accounts', 'read') && !hasPermission('payables', 'read') && !hasPermission('receivables', 'read')) setTab('home')
+    if (tab === 'assets' && !hasPermission('assets', 'read')) setTab('home')
+    if (tab === 'analytics' && !hasPermission('analytics', 'read')) setTab('home')
+    if (tab === 'settings' && !hasPermission('settings', 'read')) setTab('home')
+  }, [tab, hasPermission])
+
+  // Fetch summary for dashboard widgets
+  useEffect(() => {
+    if (tab === 'home') {
+      fetch(`${API_URL}/analytics/summary?period=monthly`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => setSummaryData(data))
+        .catch(err => console.error('Failed to fetch summary', err))
+    }
+  }, [tab])
+
   const [pettyCashTransactionsLoading, setPettyCashTransactionsLoading] = useState(false)
   const bankInputRef = useRef<HTMLInputElement | null>(null)
   const bankOptions: { name: string; slug: string; logoLocal: string; logoRemote: string }[] = [
@@ -351,8 +382,8 @@ export default function Dashboard({
     { name: 'Nations Trust Bank (NTB)', slug: 'ntb', logoLocal: '/banks/ntb.png', logoRemote: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e5/Nations_Trust_Bank_logo.svg/256px-Nations_Trust_Bank_logo.svg.png' },
     { name: 'NDB Bank', slug: 'ndb', logoLocal: '/banks/ndb.png', logoRemote: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7b/NDB_Bank_logo.svg/256px-NDB_Bank_logo.svg.png' },
   ]
-  
-  
+
+
   const [currentProjectForItems, setCurrentProjectForItems] = useState<Project | null>(null)
   const [itemRequirements, setItemRequirements] = useState('')
   const [itemServiceCategory, setItemServiceCategory] = useState('')
@@ -401,6 +432,7 @@ export default function Dashboard({
   const [scheduleView, setScheduleView] = useState<'yearly' | 'monthly'>('yearly')
   const [scheduleLoading, setScheduleLoading] = useState(false)
   const [internationalTimezone, setInternationalTimezone] = useState('America/New_York')
+  const [summaryData, setSummaryData] = useState<any>(null)
 
   const [cardModalOpen, setCardModalOpen] = useState(false)
   const [cardBankAccountId, setCardBankAccountId] = useState('')
@@ -1012,7 +1044,7 @@ export default function Dashboard({
     }
   }
 
-  
+
   const resetForm = () => {
     setEmployeeNumber('')
     setFirstName('')
@@ -1251,26 +1283,26 @@ export default function Dashboard({
 
   const saveAsset = async () => {
     if (!assetName || !assetValue || !purchaseDate) return
-    
+
     // Validation for depreciable assets
     if (isDepreciable && (!salvageValue || !usefulLife)) {
       alert('Please provide salvage value and useful life for depreciable assets')
       return
     }
-    
+
     try {
-      const body: any = { 
-        asset_name: assetName, 
-        value: assetValue, 
-        purchase_date: purchaseDate 
+      const body: any = {
+        asset_name: assetName,
+        value: assetValue,
+        purchase_date: purchaseDate
       }
-      
+
       if (isDepreciable) {
         body.depreciation_method = depreciationMethod
         body.salvage_value = salvageValue
         body.useful_life = usefulLife
       }
-      
+
       const r = await fetch(`${API_URL}/assets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1313,72 +1345,90 @@ export default function Dashboard({
             <LayoutDashboard size={20} />
             {navOpen && <span>Home</span>}
           </button>
-          
-          <div onClick={() => setTab('employees')} style={{ cursor: 'pointer', borderRadius: 8, background: tab === 'employees' ? 'var(--accent)' : 'transparent', border: '1px solid var(--primary)', overflow: 'hidden' }}>
-            <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'space-between' : 'center', color: '#fff' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Users size={20} />
-                {navOpen && <span>Employees</span>}
+
+          {hasPermission('employees', 'read') && (
+            <div onClick={() => setTab('employees')} style={{ cursor: 'pointer', borderRadius: 8, background: tab === 'employees' ? 'var(--accent)' : 'transparent', border: '1px solid var(--primary)', overflow: 'hidden' }}>
+              <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'space-between' : 'center', color: '#fff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Users size={20} />
+                  {navOpen && <span>Employees</span>}
+                </div>
+                {navOpen && <ChevronDown size={14} />}
               </div>
-              {navOpen && <ChevronDown size={14} />}
             </div>
-          </div>
-          {tab === 'employees' && (
+          )}
+          {tab === 'employees' && hasPermission('employees', 'read') && (
             <>
               <button onClick={() => setEmployeeSubTab('employees')} title="Employees" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: employeeSubTab === 'employees' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
                 <ClipboardList size={18} />
                 {navOpen && <span>Employee List</span>}
               </button>
-              <button onClick={() => setAddOpen(true)} title="Add Employee" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Plus size={16} />
-                {navOpen && <span>Add Employee</span>}
-              </button>
-              <button onClick={() => { setEmployeeSubTab('vendors'); setIsAddingVendor(false) }} title="Vendors" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: employeeSubTab === 'vendors' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Store size={18} />
-                {navOpen && <span>Vendors</span>}
-              </button>
-              <button onClick={() => { setEmployeeSubTab('vendors'); setIsAddingVendor(true) }} title="Add Vendor" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Plus size={16} />
-                {navOpen && <span>Add Vendor</span>}
-              </button>
+              {hasPermission('employees', 'create') && (
+                <button onClick={() => setAddOpen(true)} title="Add Employee" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Plus size={16} />
+                  {navOpen && <span>Add Employee</span>}
+                </button>
+              )}
+              {hasPermission('vendors', 'read') && (
+                <button onClick={() => { setEmployeeSubTab('vendors'); setIsAddingVendor(false) }} title="Vendors" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: employeeSubTab === 'vendors' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Store size={18} />
+                  {navOpen && <span>Vendors</span>}
+                </button>
+              )}
+              {hasPermission('vendors', 'create') && (
+                <button onClick={() => { setEmployeeSubTab('vendors'); setIsAddingVendor(true) }} title="Add Vendor" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Plus size={16} />
+                  {navOpen && <span>Add Vendor</span>}
+                </button>
+              )}
             </>
           )}
 
-          <button onClick={() => setTab('projects')} title="Projects" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'projects' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
-            <FolderOpen size={20} />
-            {navOpen && <span>Projects</span>}
-          </button>
-          {tab === 'projects' && (
+          {hasPermission('projects', 'read') && (
+            <button onClick={() => setTab('projects')} title="Projects" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'projects' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
+              <FolderOpen size={20} />
+              {navOpen && <span>Projects</span>}
+            </button>
+          )}
+          {tab === 'projects' && hasPermission('projects', 'create') && (
             <button onClick={() => setProjectModalOpen(true)} title="Add Project" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
               <Plus size={16} />
               {navOpen && <span>Add Project</span>}
             </button>
           )}
-          
-          <div onClick={() => setTab('accounting')} style={{ cursor: 'pointer', borderRadius: 8, background: tab === 'accounting' ? 'var(--accent)' : 'transparent', border: '1px solid var(--primary)', overflow: 'hidden' }}>
-            <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'space-between' : 'center', color: '#fff' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                 <Banknote size={20} />
-                 {navOpen && <span>Accounting</span>}
+
+          {(hasPermission('accounts', 'read') || hasPermission('payables', 'read') || hasPermission('receivables', 'read')) && (
+            <div onClick={() => setTab('accounting')} style={{ cursor: 'pointer', borderRadius: 8, background: tab === 'accounting' ? 'var(--accent)' : 'transparent', border: '1px solid var(--primary)', overflow: 'hidden' }}>
+              <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'space-between' : 'center', color: '#fff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Banknote size={20} />
+                  {navOpen && <span>Accounting</span>}
+                </div>
+                {navOpen && <ChevronDown size={14} />}
               </div>
-              {navOpen && <ChevronDown size={14} />}
             </div>
-          </div>
+          )}
           {tab === 'accounting' && (
             <>
-              <button onClick={() => { setAccountingSubTab('accounts'); setIsAddingBill(false); setIsReplenishing(false); setIsAddingReceivable(false) }} title="Accounts" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'accounts' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Landmark size={18} />
-                {navOpen && <span>Accounts</span>}
-              </button>
-              <button onClick={() => { setAccountingSubTab('payable'); setIsAddingBill(false) }} title="Payable" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'payable' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Receipt size={18} />
-                {navOpen && <span>Payable</span>}
-              </button>
-              <button onClick={() => { setAccountingSubTab('petty_cash'); setBillType('PETTY_CASH'); setIsAddingBill(false); setIsReplenishing(false) }} title="Petty Cash" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'petty_cash' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Coins size={18} />
-                {navOpen && <span>Petty Cash</span>}
-              </button>
-              {accountingSubTab === 'petty_cash' && (
+              {hasPermission('accounts', 'read') && (
+                <button onClick={() => { setAccountingSubTab('accounts'); setIsAddingBill(false); setIsReplenishing(false); setIsAddingReceivable(false) }} title="Accounts" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'accounts' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Landmark size={18} />
+                  {navOpen && <span>Accounts</span>}
+                </button>
+              )}
+              {hasPermission('payables', 'read') && (
+                <button onClick={() => { setAccountingSubTab('payable'); setIsAddingBill(false) }} title="Payable" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'payable' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Receipt size={18} />
+                  {navOpen && <span>Payable</span>}
+                </button>
+              )}
+              {hasPermission('accounts', 'read') && (
+                <button onClick={() => { setAccountingSubTab('petty_cash'); setBillType('PETTY_CASH'); setIsAddingBill(false); setIsReplenishing(false) }} title="Petty Cash" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'petty_cash' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Coins size={18} />
+                  {navOpen && <span>Petty Cash</span>}
+                </button>
+              )}
+              {accountingSubTab === 'petty_cash' && hasPermission('accounts', 'update') && (
                 <>
                   <button onClick={() => setIsReplenishing(true)} title="Replenish Petty Cash" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 48 : 0, fontSize: '0.9em' }}>
                     <Plus size={16} />
@@ -1390,62 +1440,74 @@ export default function Dashboard({
                   </button>
                 </>
               )}
-              <button onClick={() => { setAccountingSubTab('receivable'); setIsAddingReceivable(false) }} title="Receivable" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'receivable' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Inbox size={18} />
-                {navOpen && <span>Receivable</span>}
-              </button>
-              {accountingSubTab === 'receivable' && (
+              {hasPermission('receivables', 'read') && (
+                <button onClick={() => { setAccountingSubTab('receivable'); setIsAddingReceivable(false) }} title="Receivable" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: accountingSubTab === 'receivable' ? 'rgba(255,255,255,0.2)' : 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Inbox size={18} />
+                  {navOpen && <span>Receivable</span>}
+                </button>
+              )}
+              {accountingSubTab === 'receivable' && hasPermission('receivables', 'create') && (
                 <button onClick={() => setIsAddingReceivable(true)} title="Add Receivable Bill" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 48 : 0, fontSize: '0.9em' }}>
                   <Plus size={16} />
                   {navOpen && <span>Add Receivable Bill</span>}
                 </button>
               )}
               <div style={{ height: 1, background: 'rgba(255,255,255,0.2)', margin: '4px 0', marginLeft: navOpen ? 24 : 0 }} />
-              <button onClick={() => setOpenAccountModalOpen(true)} title="Open Account" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <Plus size={16} />
-                {navOpen && <span>Open Account</span>}
-              </button>
-              <button onClick={() => setCardModalOpen(true)} title="Card Management" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
-                <CreditCard size={18} />
-                {navOpen && <span>Card Management</span>}
-              </button>
+              {hasPermission('accounts', 'create') && (
+                <button onClick={() => setOpenAccountModalOpen(true)} title="Open Account" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <Plus size={16} />
+                  {navOpen && <span>Open Account</span>}
+                </button>
+              )}
+              {hasPermission('accounts', 'update') && (
+                <button onClick={() => setCardModalOpen(true)} title="Card Management" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
+                  <CreditCard size={18} />
+                  {navOpen && <span>Card Management</span>}
+                </button>
+              )}
             </>
           )}
-          <button onClick={() => setTab('assets')} title="Asset" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'assets' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
-            <Building2 size={20} />
-            {navOpen && <span>Asset</span>}
-          </button>
-          {tab === 'assets' && (
+          {hasPermission('assets', 'read') && (
+            <button onClick={() => setTab('assets')} title="Asset" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'assets' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
+              <Building2 size={20} />
+              {navOpen && <span>Asset</span>}
+            </button>
+          )}
+          {tab === 'assets' && hasPermission('assets', 'create') && (
             <button onClick={() => setAddAssetModalOpen(true)} title="Add Asset" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--primary)', background: 'transparent', color: '#fff', cursor: 'pointer', marginLeft: navOpen ? 24 : 0 }}>
               <Plus size={16} />
               {navOpen && <span>Add Asset</span>}
             </button>
           )}
-          
-          <button onClick={() => setTab('analytics')} title="Data Analytics" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'analytics' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
-            <BarChart3 size={20} />
-            {navOpen && <span>Data Analytics</span>}
-          </button>
-          
-          <button onClick={() => setTab('settings')} title="Settings" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'settings' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
-            <SettingsIcon size={20} />
-            {navOpen && <span>Settings</span>}
-          </button>
-          
+
+          {hasPermission('analytics', 'read') && (
+            <button onClick={() => setTab('analytics')} title="Data Analytics" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'analytics' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
+              <BarChart3 size={20} />
+              {navOpen && <span>Data Analytics</span>}
+            </button>
+          )}
+
+          {hasPermission('settings', 'read') && (
+            <button onClick={() => setTab('settings')} title="Settings" style={{ display: 'flex', alignItems: 'center', justifyContent: navOpen ? 'flex-start' : 'center', gap: navOpen ? 12 : 0, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', background: tab === 'settings' ? 'var(--accent)' : 'transparent', color: '#fff', cursor: 'pointer' }}>
+              <SettingsIcon size={20} />
+              {navOpen && <span>Settings</span>}
+            </button>
+          )}
+
           <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 8 }}>
-            <button 
-              onClick={() => setNavOpen(o => !o)} 
+            <button
+              onClick={() => setNavOpen(o => !o)}
               title={navOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: navOpen ? 'flex-start' : 'center', 
-                gap: navOpen ? 12 : 0, 
-                padding: '10px 12px', 
-                borderRadius: 8, 
-                border: 'none', 
-                background: 'transparent', 
-                color: '#fff', 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: navOpen ? 'flex-start' : 'center',
+                gap: navOpen ? 12 : 0,
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: 'none',
+                background: 'transparent',
+                color: '#fff',
                 cursor: 'pointer',
                 width: '100%',
                 transition: 'background 0.2s'
@@ -1462,7 +1524,91 @@ export default function Dashboard({
           {tab === 'home' && (
             <div style={{ display: 'grid', gap: 24 }}>
               <h1 style={{ marginTop: 0, fontSize: 28 }}>Welcome to Bloom Audit</h1>
-              
+
+              {/* Dynamic Widgets based on Permissions */}
+              {summaryData && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+
+                  {/* Financial Widgets */}
+                  {(hasPermission('accounts', 'read') || hasPermission('payables', 'read') || hasPermission('receivables', 'read')) && (
+                    <>
+                      {hasPermission('accounts', 'read') && (
+                        <div className="glass-card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                          <div style={{ padding: 12, borderRadius: 12, background: 'rgba(0, 136, 254, 0.1)' }}>
+                            <DollarSign size={24} color="#0088FE" />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>Total Balance</div>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: '#0088FE' }}>
+                              LKR {Number(summaryData.summary.accounts.total_balance).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {hasPermission('payables', 'read') && (
+                        <div className="glass-card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                          <div style={{ padding: 12, borderRadius: 12, background: 'rgba(255, 128, 66, 0.1)' }}>
+                            <TrendingDown size={24} color="#FF8042" />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>Payables</div>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: '#FF8042' }}>
+                              LKR {Number(summaryData.summary.payables.overall.total).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {hasPermission('receivables', 'read') && (
+                        <div className="glass-card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                          <div style={{ padding: 12, borderRadius: 12, background: 'rgba(0, 196, 159, 0.1)' }}>
+                            <TrendingUp size={24} color="#00C49F" />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>Receivables</div>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: '#00C49F' }}>
+                              LKR {Number(summaryData.summary.receivables.overall.total).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Project Widgets */}
+                  {hasPermission('projects', 'read') && (
+                    <div className="glass-card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <div style={{ padding: 12, borderRadius: 12, background: 'rgba(136, 132, 216, 0.1)' }}>
+                        <FolderOpen size={24} color="#8884D8" />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>Active Projects</div>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: '#8884D8' }}>
+                          {summaryData.summary.contracts.overall.find((s: any) => s.status === 'ongoing')?.count || 0}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Employee Widgets */}
+                  {hasPermission('employees', 'read') && (
+                    <div className="glass-card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <div style={{ padding: 12, borderRadius: 12, background: 'rgba(130, 202, 157, 0.1)' }}>
+                        <Users size={24} color="#82CA9D" />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>Total Employees</div>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: '#82CA9D' }}>
+                          {summaryData.summary.employees.reduce((sum: number, e: any) => sum + Number(e.count), 0)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'start' }}>
                 {/* Left column - Notes and To-Do widgets */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
@@ -1478,7 +1624,7 @@ export default function Dashboard({
                 </div>
               </div>
             </div>
-        )}
+          )}
           {tab === 'employees' && employeeSubTab === 'employees' && (
             <div style={{ width: '100%', display: 'grid', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -1494,17 +1640,17 @@ export default function Dashboard({
                   />
                 )}
               </div>
-              
+
               <div style={{ display: 'flex', gap: 16, alignItems: 'center', background: '#f8f9fa', padding: 12, borderRadius: 8 }}>
-                <input 
-                  type="text" 
-                  placeholder="Search by name, email, NIC..." 
+                <input
+                  type="text"
+                  placeholder="Search by name, email, NIC..."
                   value={employeeSearch}
                   onChange={e => setEmployeeSearch(e.target.value)}
                   style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', minWidth: 250 }}
                 />
-                <select 
-                  value={employeeRoleFilter} 
+                <select
+                  value={employeeRoleFilter}
                   onChange={e => setEmployeeRoleFilter(e.target.value)}
                   style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc' }}
                 >
@@ -1560,7 +1706,7 @@ export default function Dashboard({
                         </tr>
                       ))}
                     </tbody>
-                   </table>
+                  </table>
                 </div>
               )}
             </div>
@@ -1608,17 +1754,17 @@ export default function Dashboard({
                       />
                     )}
                   </div>
-                  
+
                   <div style={{ display: 'flex', gap: 16, alignItems: 'center', background: '#f8f9fa', padding: 12, borderRadius: 8, marginBottom: 16 }}>
-                    <input 
-                      type="text" 
-                      placeholder="Search by vendor name, email, phone..." 
+                    <input
+                      type="text"
+                      placeholder="Search by vendor name, email, phone..."
                       value={vendorSearch}
                       onChange={e => setVendorSearch(e.target.value)}
                       style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', minWidth: 250 }}
                     />
-                    <select 
-                      value={vendorStatusFilter} 
+                    <select
+                      value={vendorStatusFilter}
                       onChange={e => setVendorStatusFilter(e.target.value)}
                       style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc' }}
                     >
@@ -1702,15 +1848,15 @@ export default function Dashboard({
                       <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>Payable Name</label>
                       {isNewPayableName ? (
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <input 
-                            type="text" 
-                            value={billName} 
-                            onChange={e => setBillName(e.target.value)} 
-                            placeholder="e.g. Internet Bill" 
-                            style={{ width: '100%', padding: '8px 12px', borderRadius: 4, border: '1px solid #ccc' }} 
+                          <input
+                            type="text"
+                            value={billName}
+                            onChange={e => setBillName(e.target.value)}
+                            placeholder="e.g. Internet Bill"
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: 4, border: '1px solid #ccc' }}
                             autoFocus
                           />
-                          <button 
+                          <button
                             onClick={() => { setIsNewPayableName(false); setBillName('') }}
                             style={{ padding: '8px 12px', borderRadius: 4, border: '1px solid #ccc', background: '#f5f5f5', cursor: 'pointer' }}
                             title="Select existing"
@@ -1719,8 +1865,8 @@ export default function Dashboard({
                           </button>
                         </div>
                       ) : (
-                        <select 
-                          value={billName} 
+                        <select
+                          value={billName}
                           onChange={e => {
                             if (e.target.value === '__NEW__') {
                               setIsNewPayableName(true)
@@ -1728,7 +1874,7 @@ export default function Dashboard({
                             } else {
                               setBillName(e.target.value)
                             }
-                          }} 
+                          }}
                           style={{ width: '100%', padding: '8px 12px', borderRadius: 4, border: '1px solid #ccc' }}
                         >
                           <option value="">Select Payable Name</option>
@@ -1842,16 +1988,16 @@ export default function Dashboard({
                   </div>
 
                   <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-                    <input 
-                      type="text" 
-                      placeholder="Search payables..." 
-                      value={payableSearch} 
-                      onChange={e => setPayableSearch(e.target.value)} 
-                      style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', flex: 1 }} 
+                    <input
+                      type="text"
+                      placeholder="Search payables..."
+                      value={payableSearch}
+                      onChange={e => setPayableSearch(e.target.value)}
+                      style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', flex: 1 }}
                     />
-                    <select 
-                      value={payableTypeFilter} 
-                      onChange={e => setPayableTypeFilter(e.target.value)} 
+                    <select
+                      value={payableTypeFilter}
+                      onChange={e => setPayableTypeFilter(e.target.value)}
                       style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc' }}
                     >
                       <option value="All">All Types</option>
@@ -1859,9 +2005,9 @@ export default function Dashboard({
                       <option value="RECURRING">Recurring</option>
                       <option value="PETTY_CASH">Petty Cash</option>
                     </select>
-                    <select 
-                      value={payableStatusFilter} 
-                      onChange={e => setPayableStatusFilter(e.target.value)} 
+                    <select
+                      value={payableStatusFilter}
+                      onChange={e => setPayableStatusFilter(e.target.value)}
                       style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc' }}
                     >
                       <option value="All">All Status</option>
@@ -1960,7 +2106,7 @@ export default function Dashboard({
                   />
                 )}
               </div>
-              
+
               {isAddingBill ? (
                 <div className="glass-panel" style={{ padding: 24 }}>
                   <h3 style={{ marginTop: 0, marginBottom: 16 }}>Add Petty Cash Bill</h3>
@@ -2044,9 +2190,9 @@ export default function Dashboard({
                     />
                   ) : (
                     <div style={{ width: '100%', overflowX: 'auto' }}>
-                  <table className="glass-panel" style={{ width: '100%', borderCollapse: 'collapse', overflow: 'hidden', fontSize: '14px' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--primary)', color: '#fff' }}>
+                      <table className="glass-panel" style={{ width: '100%', borderCollapse: 'collapse', overflow: 'hidden', fontSize: '14px' }}>
+                        <thead>
+                          <tr style={{ background: 'var(--primary)', color: '#fff' }}>
                             <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600 }}>ID</th>
                             <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600 }}>Type</th>
                             <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600 }}>Description</th>
@@ -2060,13 +2206,13 @@ export default function Dashboard({
                             <tr key={t.id} style={{ borderBottom: idx < pettyCashTransactions.length - 1 ? '1px solid #e0e0e0' : 'none' }}>
                               <td style={{ padding: '12px 16px' }}>{t.id}</td>
                               <td style={{ padding: '12px 16px' }}>
-                                <span style={{ 
-                                  padding: '4px 8px', 
-                                  borderRadius: 4, 
-                                  background: t.transaction_type === 'REPLENISHMENT' ? '#e3f2fd' : '#ffebee', 
+                                <span style={{
+                                  padding: '4px 8px',
+                                  borderRadius: 4,
+                                  background: t.transaction_type === 'REPLENISHMENT' ? '#e3f2fd' : '#ffebee',
                                   color: t.transaction_type === 'REPLENISHMENT' ? '#1565c0' : '#c62828',
-                                  fontSize: 12, 
-                                  fontWeight: 600 
+                                  fontSize: 12,
+                                  fontWeight: 600
                                 }}>
                                   {t.transaction_type}
                                 </span>
@@ -2156,15 +2302,15 @@ export default function Dashboard({
                       )
 
                       return (
-                        <div 
+                        <div
                           key={`${acc.id}-${acc.account_number}`}
                           onClick={() => setSelectedAccountForCards(acc)}
-                          style={{ 
+                          style={{
                             position: 'relative',
-                            borderRadius: 24, 
-                            overflow: 'hidden', 
-                            background: '#fff', 
-                            border: '1px solid rgba(0,0,0,0.08)', 
+                            borderRadius: 24,
+                            overflow: 'hidden',
+                            background: '#fff',
+                            border: '1px solid rgba(0,0,0,0.08)',
                             boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
                             cursor: 'pointer',
                             transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
@@ -2181,47 +2327,47 @@ export default function Dashboard({
                             e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.04)'
                           }}
                         >
-                            <div style={{ background: 'linear-gradient(135deg, #0061ff 0%, #60efff 100%)', padding: '24px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                              {logoEl}
-                              <div style={{ display: 'grid', gap: 4 }}>
-                                <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.1)', lineHeight: 1.2 }}>{acc.bank_name}</div>
-                                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{acc.branch || 'Main Branch'}</div>
-                              </div>
+                          <div style={{ background: 'linear-gradient(135deg, #0061ff 0%, #60efff 100%)', padding: '24px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                            {logoEl}
+                            <div style={{ display: 'grid', gap: 4 }}>
+                              <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.1)', lineHeight: 1.2 }}>{acc.bank_name}</div>
+                              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{acc.branch || 'Main Branch'}</div>
                             </div>
-                            
-                            <div style={{ padding: '24px', display: 'grid', gap: 20, flex: 1 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed #e0e0e0', paddingBottom: 16 }}>
-                                <span style={{ fontSize: 12, color: '#888', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Account Number</span>
-                                <span style={{ fontSize: 16, color: '#333', fontFamily: '"JetBrains Mono", monospace', fontWeight: 600, letterSpacing: '-0.5px' }}>{acc.account_number}</span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <div style={{ fontSize: 13, color: '#666', fontWeight: 500 }}>Available Balance</div>
-                                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--primary)', letterSpacing: '-1px', display: 'flex', alignItems: 'baseline' }}>
-                                  <span style={{ fontSize: 16, marginRight: 6, fontWeight: 600, color: '#888' }}>LKR</span>
-                                  {Number(acc.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                              </div>
-                            </div>
+                          </div>
 
-                            <div style={{ padding: '16px 24px', background: '#f8faff', borderTop: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4CAF50' }}></div>
-                                  <span style={{ fontSize: 13, color: '#4CAF50', fontWeight: 600 }}>Active</span>
-                                </div>
-                                <span style={{ fontSize: 13, color: '#0061ff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  View Cards <span style={{ fontSize: 16 }}>→</span>
-                                </span>
+                          <div style={{ padding: '24px', display: 'grid', gap: 20, flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed #e0e0e0', paddingBottom: 16 }}>
+                              <span style={{ fontSize: 12, color: '#888', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Account Number</span>
+                              <span style={{ fontSize: 16, color: '#333', fontFamily: '"JetBrains Mono", monospace', fontWeight: 600, letterSpacing: '-0.5px' }}>{acc.account_number}</span>
                             </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <div style={{ fontSize: 13, color: '#666', fontWeight: 500 }}>Available Balance</div>
+                              <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--primary)', letterSpacing: '-1px', display: 'flex', alignItems: 'baseline' }}>
+                                <span style={{ fontSize: 16, marginRight: 6, fontWeight: 600, color: '#888' }}>LKR</span>
+                                {Number(acc.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ padding: '16px 24px', background: '#f8faff', borderTop: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4CAF50' }}></div>
+                              <span style={{ fontSize: 13, color: '#4CAF50', fontWeight: 600 }}>Active</span>
+                            </div>
+                            <span style={{ fontSize: 13, color: '#0061ff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              View Cards <span style={{ fontSize: 16 }}>→</span>
+                            </span>
+                          </div>
                         </div>
                       )
                     })}
                   </div>
-              </>
-            )}
+                </>
+              )}
             </div>
           )}
 
-          
+
           {tab === 'accounting' && accountingSubTab === 'receivable' && (
             <div style={{ width: '100%', display: 'grid', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -2242,25 +2388,25 @@ export default function Dashboard({
               </div>
 
               <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-                <input 
-                  type="text" 
-                  placeholder="Search receivables..." 
-                  value={receivableSearch} 
-                  onChange={e => setReceivableSearch(e.target.value)} 
-                  style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', flex: 1 }} 
+                <input
+                  type="text"
+                  placeholder="Search receivables..."
+                  value={receivableSearch}
+                  onChange={e => setReceivableSearch(e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', flex: 1 }}
                 />
-                <select 
-                  value={receivableTypeFilter} 
-                  onChange={e => setReceivableTypeFilter(e.target.value)} 
+                <select
+                  value={receivableTypeFilter}
+                  onChange={e => setReceivableTypeFilter(e.target.value)}
                   style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc' }}
                 >
                   <option value="All">All Types</option>
                   <option value="ONE_TIME">One Time</option>
                   <option value="RECURRING">Recurring</option>
                 </select>
-                <select 
-                  value={receivableStatusFilter} 
-                  onChange={e => setReceivableStatusFilter(e.target.value)} 
+                <select
+                  value={receivableStatusFilter}
+                  onChange={e => setReceivableStatusFilter(e.target.value)}
                   style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc' }}
                 >
                   <option value="All">All Status</option>
@@ -2346,23 +2492,23 @@ export default function Dashboard({
                       <label style={{ display: 'grid', gap: 6 }}>
                         <span style={{ fontWeight: 500 }}>Type</span>
                         <select value={receivableType} onChange={e => setReceivableType(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }}>
-                            <option value="">Select Type</option>
-                            <option value="ONE_TIME">One Time</option>
-                            <option value="RECURRING">Recurring</option>
+                          <option value="">Select Type</option>
+                          <option value="ONE_TIME">One Time</option>
+                          <option value="RECURRING">Recurring</option>
                         </select>
                       </label>
                       <label style={{ display: 'grid', gap: 6 }}>
                         <span style={{ fontWeight: 500 }}>Amount</span>
                         <input type="number" value={receivableAmount} onChange={e => setReceivableAmount(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }} />
                       </label>
-                      
+
                       <label style={{ display: 'grid', gap: 6 }}>
                         <span style={{ fontWeight: 500 }}>Frequency</span>
                         <select value={receivableFrequency} onChange={e => setReceivableFrequency(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }}>
-                            <option value="">Select Frequency</option>
-                            <option value="WEEKLY">Weekly</option>
-                            <option value="MONTHLY">Monthly</option>
-                            <option value="YEARLY">Yearly</option>
+                          <option value="">Select Frequency</option>
+                          <option value="WEEKLY">Weekly</option>
+                          <option value="MONTHLY">Monthly</option>
+                          <option value="YEARLY">Yearly</option>
                         </select>
                       </label>
                       <label style={{ display: 'grid', gap: 6 }}>
@@ -2376,16 +2522,16 @@ export default function Dashboard({
                       <label style={{ display: 'grid', gap: 6 }}>
                         <span style={{ fontWeight: 500 }}>Project</span>
                         <select value={receivableProjectId} onChange={e => setReceivableProjectId(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }}>
-                            <option value="">Select Project</option>
-                            {projects.map(p => <option key={p.project_id} value={p.project_id}>{p.project_name}</option>)}
+                          <option value="">Select Project</option>
+                          {projects.map(p => <option key={p.project_id} value={p.project_id}>{p.project_name}</option>)}
                         </select>
                       </label>
 
                       <label style={{ display: 'grid', gap: 6 }}>
                         <span style={{ fontWeight: 500 }}>Bank Account</span>
                         <select value={receivableBankAccountId} onChange={e => setReceivableBankAccountId(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }}>
-                            <option value="">Select Account</option>
-                            {accounts.map(a => <option key={a.id} value={a.id}>{a.bank_name} - {a.account_number}</option>)}
+                          <option value="">Select Account</option>
+                          {accounts.map(a => <option key={a.id} value={a.id}>{a.bank_name} - {a.account_number}</option>)}
                         </select>
                       </label>
                       <label style={{ display: 'grid', gap: 6 }}>
@@ -2398,8 +2544,8 @@ export default function Dashboard({
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingTop: 24 }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                            <input type="checkbox" checked={receivableIsActive} onChange={e => setReceivableIsActive(e.target.checked)} style={{ width: 18, height: 18 }} />
-                            <span style={{ fontWeight: 500 }}>Is Active</span>
+                          <input type="checkbox" checked={receivableIsActive} onChange={e => setReceivableIsActive(e.target.checked)} style={{ width: 18, height: 18 }} />
+                          <span style={{ fontWeight: 500 }}>Is Active</span>
                         </label>
                       </div>
 
@@ -2409,8 +2555,8 @@ export default function Dashboard({
                       </label>
                     </div>
                     <div style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'flex-end' }}>
-                        <button onClick={() => setIsAddingReceivable(false)} className="btn-secondary" style={{ color: 'var(--text-main)', background: 'rgba(255,255,255,0.5)' }}>Cancel</button>
-                        <button onClick={handleSaveReceivable} className="btn-primary">Save Receivable</button>
+                      <button onClick={() => setIsAddingReceivable(false)} className="btn-secondary" style={{ color: 'var(--text-main)', background: 'rgba(255,255,255,0.5)' }}>Cancel</button>
+                      <button onClick={handleSaveReceivable} className="btn-primary">Save Receivable</button>
                     </div>
                   </div>
                 </div>
@@ -2470,7 +2616,7 @@ export default function Dashboard({
                           <td style={{ padding: '12px 16px' }}>{new Date(asset.purchase_date).toLocaleDateString()}</td>
                           <td style={{ padding: '12px 16px' }}>
                             {asset.depreciation_method && (
-                              <button 
+                              <button
                                 onClick={async () => {
                                   setSelectedAssetForSchedule(asset)
                                   setScheduleLoading(true)
@@ -2631,89 +2777,89 @@ export default function Dashboard({
         </div>
       )}
       {selectedAccountForCards && (
-        <div 
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'grid', placeItems: 'center', zIndex: 1200, padding: 20 }} 
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'grid', placeItems: 'center', zIndex: 1200, padding: 20 }}
           onClick={() => setSelectedAccountForCards(null)}
         >
-          <div 
-            style={{ width: 'min(600px, 92vw)', maxHeight: '85vh', background: '#fff', borderRadius: 24, boxShadow: '0 20px 50px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }} 
+          <div
+            style={{ width: 'min(600px, 92vw)', maxHeight: '85vh', background: '#fff', borderRadius: 24, boxShadow: '0 20px 50px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}
             onClick={e => e.stopPropagation()}
           >
             <div style={{ padding: '24px 32px', background: 'linear-gradient(135deg, #0061ff 0%, #60efff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-               <div>
-                  <h2 style={{ margin: 0, color: '#fff', fontSize: 24, fontWeight: 700 }}>{selectedAccountForCards.bank_name}</h2>
-                  <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>{selectedAccountForCards.branch}</p>
-               </div>
-               <button 
+              <div>
+                <h2 style={{ margin: 0, color: '#fff', fontSize: 24, fontWeight: 700 }}>{selectedAccountForCards.bank_name}</h2>
+                <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>{selectedAccountForCards.branch}</p>
+              </div>
+              <button
                 onClick={() => setSelectedAccountForCards(null)}
                 style={{ background: 'rgba(255,255,255,0.2)', border: 'none', width: 32, height: 32, borderRadius: '50%', color: '#fff', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-               >
-                 ✕
-               </button>
+              >
+                ✕
+              </button>
             </div>
-            
+
             <div style={{ padding: 32, overflowY: 'auto', display: 'grid', gap: 24 }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16, borderBottom: '1px dashed #eee' }}>
-                  <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>ACCOUNT NUMBER</span>
-                  <span style={{ fontSize: 16, fontFamily: 'monospace', fontWeight: 700, color: '#333' }}>{selectedAccountForCards.account_number}</span>
-               </div>
-               
-               <h3 style={{ margin: '8px 0 0', fontSize: 16, color: '#333', fontWeight: 700 }}>Associated Debit Cards</h3>
-               
-               {cards.filter(c => c.bank_account_id === selectedAccountForCards.id).length > 0 ? (
-                 <div style={{ display: 'grid', gap: 16 }}>
-                    {cards.filter(c => c.bank_account_id === selectedAccountForCards.id).map(card => (
-                       <div key={card.id} style={{ borderRadius: 16, border: '1px solid #e0e0e0', overflow: 'hidden' }}>
-                          <div style={{ background: 'var(--primary)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" style={{ height: 16, filter: 'brightness(0) invert(1)' }} />
-                                <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>Debit Card</span>
-                             </div>
-                             <div style={{ padding: '4px 8px', borderRadius: 4, background: card.is_active ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)', color: card.is_active ? '#81c784' : '#e57373', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
-                               {card.is_active ? 'Active' : 'Inactive'}
-                             </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16, borderBottom: '1px dashed #eee' }}>
+                <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>ACCOUNT NUMBER</span>
+                <span style={{ fontSize: 16, fontFamily: 'monospace', fontWeight: 700, color: '#333' }}>{selectedAccountForCards.account_number}</span>
+              </div>
+
+              <h3 style={{ margin: '8px 0 0', fontSize: 16, color: '#333', fontWeight: 700 }}>Associated Debit Cards</h3>
+
+              {cards.filter(c => c.bank_account_id === selectedAccountForCards.id).length > 0 ? (
+                <div style={{ display: 'grid', gap: 16 }}>
+                  {cards.filter(c => c.bank_account_id === selectedAccountForCards.id).map(card => (
+                    <div key={card.id} style={{ borderRadius: 16, border: '1px solid #e0e0e0', overflow: 'hidden' }}>
+                      <div style={{ background: 'var(--primary)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" style={{ height: 16, filter: 'brightness(0) invert(1)' }} />
+                          <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>Debit Card</span>
+                        </div>
+                        <div style={{ padding: '4px 8px', borderRadius: 4, background: card.is_active ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)', color: card.is_active ? '#81c784' : '#e57373', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+                          {card.is_active ? 'Active' : 'Inactive'}
+                        </div>
+                      </div>
+                      <div style={{ padding: 20, background: '#fcfcfc', display: 'grid', gap: 16 }}>
+                        <div style={{ display: 'grid', gap: 6 }}>
+                          <span style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase' }}>Card Number</span>
+                          <div style={{ fontSize: 16, fontFamily: 'monospace', color: '#333', fontWeight: 600, letterSpacing: '1px' }}>
+                            **** **** **** {card.card_number_last4}
                           </div>
-                          <div style={{ padding: 20, background: '#fcfcfc', display: 'grid', gap: 16 }}>
-                             <div style={{ display: 'grid', gap: 6 }}>
-                                <span style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase' }}>Card Number</span>
-                                <div style={{ fontSize: 16, fontFamily: 'monospace', color: '#333', fontWeight: 600, letterSpacing: '1px' }}>
-                                   **** **** **** {card.card_number_last4}
-                                </div>
-                             </div>
-                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                <div style={{ display: 'grid', gap: 6 }}>
-                                   <span style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase' }}>Card Holder</span>
-                                   <div style={{ fontSize: 14, color: '#333', fontWeight: 500 }}>{card.card_holder_name}</div>
-                                </div>
-                                <div style={{ display: 'grid', gap: 6 }}>
-                                   <span style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase' }}>Expires</span>
-                                   <div style={{ fontSize: 14, color: '#333', fontWeight: 500 }}>{card.expiry_date}</div>
-                                </div>
-                             </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                          <div style={{ display: 'grid', gap: 6 }}>
+                            <span style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase' }}>Card Holder</span>
+                            <div style={{ fontSize: 14, color: '#333', fontWeight: 500 }}>{card.card_holder_name}</div>
                           </div>
-                       </div>
-                    ))}
-                 </div>
-               ) : (
-                 <div style={{ padding: 40, textAlign: 'center', background: '#f9f9f9', borderRadius: 12, border: '1px dashed #ddd' }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>💳</div>
-                    <div style={{ color: '#666', fontWeight: 500 }}>No cards found for this account.</div>
-                    <div style={{ fontSize: 13, color: '#999', marginTop: 4 }}>Add a card via Card Management.</div>
-                 </div>
-               )}
+                          <div style={{ display: 'grid', gap: 6 }}>
+                            <span style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase' }}>Expires</span>
+                            <div style={{ fontSize: 14, color: '#333', fontWeight: 500 }}>{card.expiry_date}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: 40, textAlign: 'center', background: '#f9f9f9', borderRadius: 12, border: '1px dashed #ddd' }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>💳</div>
+                  <div style={{ color: '#666', fontWeight: 500 }}>No cards found for this account.</div>
+                  <div style={{ fontSize: 13, color: '#999', marginTop: 4 }}>Add a card via Card Management.</div>
+                </div>
+              )}
             </div>
-            
+
             <div style={{ padding: '20px 32px', borderTop: '1px solid #eee', background: '#fff', textAlign: 'right' }}>
-               <button 
-                  onClick={() => setSelectedAccountForCards(null)}
-                  style={{ padding: '10px 24px', borderRadius: 8, background: '#f0f0f0', color: '#333', border: 'none', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#e0e0e0'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#f0f0f0'}
-               >
-                 Close
-               </button>
+              <button
+                onClick={() => setSelectedAccountForCards(null)}
+                style={{ padding: '10px 24px', borderRadius: 8, background: '#f0f0f0', color: '#333', border: 'none', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#e0e0e0'}
+                onMouseLeave={e => e.currentTarget.style.background = '#f0f0f0'}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -2764,7 +2910,7 @@ export default function Dashboard({
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 1000, overflowY: 'auto', padding: '20px' }} onClick={() => { setEditOpen(false); resetForm() }}>
           <div className="glass-panel" style={{ width: 'min(600px, 92vw)', maxHeight: '90vh', padding: 24, borderRadius: 16, overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <h2 style={{ marginTop: 0 }}>Edit Employee</h2>
-             <div style={{ display: 'grid', gap: 12 }}>
+            <div style={{ display: 'grid', gap: 12 }}>
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontWeight: 500 }}>Employee Number *</span>
                 <input value={employeeNumber} onChange={e => setEmployeeNumber(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }} required />
@@ -3148,61 +3294,61 @@ export default function Dashboard({
                 <span style={{ fontWeight: 500 }}>Purchase Date *</span>
                 <input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }} required />
               </label>
-              
+
               <div style={{ borderTop: '2px dashed #e0e0e0', paddingTop: 16, marginTop: 8 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 16 }}>
-                  <input 
-                    type="checkbox" 
-                    checked={isDepreciable} 
-                    onChange={e => setIsDepreciable(e.target.checked)} 
+                  <input
+                    type="checkbox"
+                    checked={isDepreciable}
+                    onChange={e => setIsDepreciable(e.target.checked)}
                     style={{ width: 18, height: 18, cursor: 'pointer' }}
                   />
                   <span style={{ fontWeight: 600, fontSize: 15 }}>This is a depreciable asset</span>
                 </label>
-                
+
                 {isDepreciable && (
                   <div style={{ display: 'grid', gap: 12, paddingLeft: 26, background: '#f8f9fa', padding: 16, borderRadius: 8 }}>
                     <label style={{ display: 'grid', gap: 6 }}>
                       <span style={{ fontWeight: 500 }}>Depreciation Method *</span>
-                      <select 
-                        value={depreciationMethod} 
-                        onChange={e => setDepreciationMethod(e.target.value as 'STRAIGHT_LINE' | 'DOUBLE_DECLINING')} 
+                      <select
+                        value={depreciationMethod}
+                        onChange={e => setDepreciationMethod(e.target.value as 'STRAIGHT_LINE' | 'DOUBLE_DECLINING')}
                         style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }}
                       >
                         <option value="STRAIGHT_LINE">Straight-Line Depreciation</option>
                         <option value="DOUBLE_DECLINING">Double-Declining Balance (DDB)</option>
                       </select>
                       <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                        {depreciationMethod === 'STRAIGHT_LINE' 
+                        {depreciationMethod === 'STRAIGHT_LINE'
                           ? '📊 Best for: Office furniture, buildings - loses value steadily'
                           : '📉 Best for: Technology, computers - becomes obsolete quickly'
                         }
                       </div>
                     </label>
-                    
+
                     <label style={{ display: 'grid', gap: 6 }}>
                       <span style={{ fontWeight: 500 }}>Salvage Value *</span>
-                      <input 
-                        type="number" 
-                        value={salvageValue} 
-                        onChange={e => setSalvageValue(e.target.value)} 
+                      <input
+                        type="number"
+                        value={salvageValue}
+                        onChange={e => setSalvageValue(e.target.value)}
                         placeholder="Estimated value at end of life"
-                        style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }} 
-                        required 
+                        style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }}
+                        required
                       />
                       <div style={{ fontSize: 12, color: '#666' }}>The estimated value when the asset reaches end of its useful life</div>
                     </label>
-                    
+
                     <label style={{ display: 'grid', gap: 6 }}>
                       <span style={{ fontWeight: 500 }}>Useful Life (Years) *</span>
-                      <input 
-                        type="number" 
-                        value={usefulLife} 
-                        onChange={e => setUsefulLife(e.target.value)} 
+                      <input
+                        type="number"
+                        value={usefulLife}
+                        onChange={e => setUsefulLife(e.target.value)}
                         placeholder="e.g., 5"
                         min="1"
-                        style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }} 
-                        required 
+                        style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ccc' }}
+                        required
                       />
                       <div style={{ fontSize: 12, color: '#666' }}>Expected number of years the asset will be in service</div>
                     </label>
@@ -3222,7 +3368,7 @@ export default function Dashboard({
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 1000, padding: '20px', overflowY: 'auto' }} onClick={() => { setDepreciationScheduleModalOpen(false); setSelectedAssetForSchedule(null); setDepreciationSchedule([]) }}>
           <div className="glass-panel" style={{ width: 'min(900px, 96vw)', maxHeight: '90vh', padding: 24, borderRadius: 16, overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <h2 style={{ marginTop: 0 }}>Depreciation Schedule - {selectedAssetForSchedule.asset_name}</h2>
-            
+
             <div style={{ background: '#f8f9fa', padding: 16, borderRadius: 8, marginBottom: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                 <div>
@@ -3247,7 +3393,7 @@ export default function Dashboard({
             </div>
 
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-              <button 
+              <button
                 onClick={async () => {
                   setScheduleView('yearly')
                   setScheduleLoading(true)
@@ -3267,7 +3413,7 @@ export default function Dashboard({
               >
                 Yearly View
               </button>
-              <button 
+              <button
                 onClick={async () => {
                   setScheduleView('monthly')
                   setScheduleLoading(true)
@@ -3305,9 +3451,9 @@ export default function Dashboard({
                   </thead>
                   <tbody>
                     {depreciationSchedule.map((item, idx) => (
-                      <tr 
-                        key={idx} 
-                        style={{ 
+                      <tr
+                        key={idx}
+                        style={{
                           borderBottom: idx < depreciationSchedule.length - 1 ? '1px solid #e0e0e0' : 'none',
                           background: item.isCurrent ? '#fff3cd' : 'transparent'
                         }}
@@ -3343,7 +3489,7 @@ export default function Dashboard({
           </div>
         </div>
       )}
-      
+
     </div>
   )
 }
