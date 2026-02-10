@@ -385,6 +385,7 @@ export default function Settings({ accessToken }: { accessToken: string }) {
 
     setSaving(true)
     try {
+      console.log('Attempting to delete user:', user.id, 'at', `${API_URL}/rbac/users/${user.id}`)
       const r = await fetch(`${API_URL}/rbac/users/${user.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${accessToken}` }
@@ -394,8 +395,14 @@ export default function Settings({ accessToken }: { accessToken: string }) {
         alert('User deleted successfully')
         fetchUsers()
       } else {
-        const data = await r.json()
-        alert(data.message || 'Failed to delete user')
+        const text = await r.text()
+        try {
+          const data = JSON.parse(text)
+          alert(data.message || 'Failed to delete user')
+        } catch (e) {
+          console.error('Non-JSON response from ' + API_URL + ':', text)
+          alert('Failed to delete user: Server returned an error (check console). API URL: ' + API_URL)
+        }
       }
     } catch (e) {
       console.error('Error deleting user:', e)

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { pool } from '../db'
+import { pool, mainPool } from '../db'
 
 type EmployeePayload = {
   employee_number?: string
@@ -62,7 +62,7 @@ export const createEmployee = async (req: Request, res: Response) => {
     const currentDbName = process.env.DATABASE_URL?.split('/').pop()
 
     if (currentDbName) {
-      const limitResult = await mainSystemPool.query(
+      const limitResult = await mainPool.query(
         'SELECT user_limit FROM erp_projects WHERE db_name = $1',
         [currentDbName]
       )

@@ -602,6 +602,27 @@ export const deleteUser = async (req: Request, res: Response) => {
 
     const user = userResult.rows[0]
 
+    // Delete user related data first to avoid FK constraints
+    // 1. Password History
+    await pool.query('DELETE FROM password_history WHERE user_id = $1', [userId])
+
+    // 2. Todo Shares (shared with this user)
+    await pool.query('DELETE FROM todo_shares WHERE shared_with_user_id = $1', [userId])
+
+    // 3. Note Shares (shared with this user)
+    await pool.query('DELETE FROM note_shares WHERE shared_with_user_id = $1', [userId])
+
+    // 4. Notes (created by user) - Note shares referencing these will cascade if defined, else might error. 
+    // Assuming Notes -> Note Shares has cascade, otherwise we need to find notes by user and delete their shares.
+    // Let's safe delete shares of user's notes first
+    await pool.query('DELETE FROM note_shares WHERE note_id IN (SELECT id FROM notes WHERE user_id = $1)', [userId])
+    await pool.query('DELETE FROM notes WHERE user_id = $1', [userId])
+
+    // 5. Todos (created by user)
+    // Safe delete shares of user's todos first
+    await pool.query('DELETE FROM todo_shares WHERE todo_id IN (SELECT id FROM todos WHERE user_id = $1)', [userId])
+    await pool.query('DELETE FROM todos WHERE user_id = $1', [userId])
+
     // Delete user (Cascading delete handles dependent tables like user_roles)
     await pool.query('DELETE FROM users WHERE id = $1', [userId])
 
@@ -617,6 +638,9 @@ export const deleteUser = async (req: Request, res: Response) => {
     return res.json({ message: 'User deleted successfully' })
   } catch (error) {
     console.error('Error deleting user:', error)
-    return res.status(500).json({ error: 'server_error', message: 'Failed to delete user' })
+    return res.status(500).json({
+      error: 'server_error',
+      message: 'Failed to delete user: ' + (error instanceof Error ? error.message : String(error))
+    })
   }
 }
